@@ -1,14 +1,11 @@
 server:
   port: 8080
+
 spring:
   main:
     banner-mode: off
   application:
     name: client-a
-  servlet:
-    multipart:
-      max-file-size: 1MB
-      max-request-size: 1MB
   cloud:
     openfeign:
       client:
@@ -23,6 +20,7 @@ spring:
             connectTimeout: 5000
             readTimeout: 5000
             loggerLevel: basic
+
 resilience4j:
   retry:
     instances:
@@ -31,3 +29,12 @@ resilience4j:
         wait-duration: 1s
         enable-exponential-backoff: true
         exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - feign.RetryableException
+      serviceCRetry:
+        max-attempts: 2
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 1.5
