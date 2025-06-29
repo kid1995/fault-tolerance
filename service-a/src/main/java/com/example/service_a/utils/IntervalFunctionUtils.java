@@ -1,4 +1,4 @@
-package com.example.client_a.utils;
+package com.example.service_a.utils;
 
 import io.github.resilience4j.core.IntervalFunction;
 import java.time.Duration;

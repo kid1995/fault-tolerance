@@ -1,0 +1,10 @@
+server:
+  port: 8080
+spring:
+  main:
+    banner-mode: off
+  application:
+    name: service-a
+app:
+  serviceB:
+    url: http://localhost:8081
