@@ -26,7 +26,10 @@ resilience4j:
           - java.net.ConnectException
           - java.net.SocketTimeoutException
           - feign.RetryableException
-
+# Enable Resilience4j integration with Feign
+feign:
+  resilience4j:
+    enabled: true
 app:
   serviceB:
     url: http://localhost:8081
