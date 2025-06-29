@@ -16,7 +16,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 
 @Configuration
-@Import(FeignConfig.class)
 public class FeignClientConfig4ServiceB {
 
     @Value("${app.serviceB.url}")
@@ -47,7 +46,7 @@ public class FeignClientConfig4ServiceB {
 
         return Feign.builder()
                 .addCapability(Resilience4jFeign.capability(decorators))
-                .contract(springContract)  // KRITISCH: Spring Contract für @GetMapping
+                .contract(springContract)  // Use SpringMvcContract for @GetMapping support
                 .target(ServiceBClient.class, serviceBURL);
     }
 }
