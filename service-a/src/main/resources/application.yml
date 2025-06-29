@@ -5,6 +5,28 @@ spring:
     banner-mode: off
   application:
     name: service-a
+  cloud:
+    openfeign:
+      client:
+        config:
+          serviceC:
+            url: http://localhost:8082
+            connectTimeout: 5000
+            readTimeout: 5000
+            loggerLevel: basic
+resilience4j:
+  retry:
+    instances:
+      serviceCRetry:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - feign.RetryableException
+
 app:
   serviceB:
     url: http://localhost:8081

@@ -1,7 +1,6 @@
 package com.example.service_a.config.service;
 
 import com.example.service_a.adapter.http.client.ServiceBClient;
-import com.example.service_a.config.FeignConfig;
 import com.example.service_a.utils.RetryConfigUtil;
 import feign.Feign;
 import io.github.resilience4j.feign.FeignDecorators;
@@ -12,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.openfeign.support.SpringMvcContract;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 
 @Configuration
