@@ -21,6 +21,7 @@ public class ExternServiceAdapter {
             return serviceBClient.getResource();
         }
 
+        @Retry(name = "serviceCRetry")
         public String getResourceFromServiceC() {
             return serviceCClient.getResource();
         }
