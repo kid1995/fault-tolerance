@@ -1,0 +1,15 @@
+server:
+  port: 8081
+
+spring:
+  main:
+    banner-mode: off
+  application:
+    name: service-b
+
+# Custom application properties
+app:
+  fault-simulation:
+    default-error-rate: 0.15
+    default-timeout-rate: 0.10
+    default-max-delay-ms: 3000
