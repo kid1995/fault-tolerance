@@ -35,8 +35,7 @@ public class ProgrammaticRetryConfig {
         return new SpringMvcContract();
     }
 
-    @Bean
-    @Primary
+    @Bean("programmaticRetryClientBean")  // Give it a specific name
     public ProgrammaticRetryClient programmaticRetryClient(Retry programmaticRetry, SpringMvcContract springContract) {
         FeignDecorators decorators = FeignDecorators.builder()
                 .withRetry(programmaticRetry)

@@ -1,14 +1,17 @@
 server:
   port: 8080
+
 spring:
   main:
     banner-mode: off
   application:
     name: resilience-app
+
+# Resilience4j Configuration
 resilience4j:
   retry:
-    instances:
-      qualifierRetryConfig:
+    configs:
+      default:
         max-attempts: 3
         wait-duration: 1s
         enable-exponential-backoff: true
@@ -18,6 +21,20 @@ resilience4j:
           - java.net.SocketTimeoutException
           - feign.RetryableException
           - feign.FeignException
+    instances:
+      # Used by @Qualifier approach in QualifierRetryClient
+      qualifierRetryConfig:
+        base-config: default
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - feign.RetryableException
+          - feign.FeignException
+      # Used by @Retry annotation approach in TroubleMakerAdapter
       annotationRetryConfig:
         max-attempts: 5
         wait-duration: 500ms
@@ -28,6 +45,24 @@ resilience4j:
           - java.net.SocketTimeoutException
           - feign.RetryableException
           - feign.FeignException
+
+# Application URLs
 app:
   troubleMaker:
     url: http://localhost:8081
+
+
+# Management endpoints for monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,retries
+  endpoint:
+    health:
+      show-details: always
+    retries:
+      enabled: true
+  health:
+    retries:
+      enabled: true

@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(name = "annotationRetryService", url = "${app.troubleMaker.url}")
 public interface AnnotationRetryService {
-
     @GetMapping("/api/errors")
     String simulateError(@RequestParam("errorName") String errorName, @RequestBody ErrorTestRequest errorConfig);
 }

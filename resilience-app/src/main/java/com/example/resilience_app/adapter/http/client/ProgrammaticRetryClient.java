@@ -7,11 +7,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(
-        name = "programmaticRetryClient",
-        url = "${app.troubleMaker.url}",
-        configuration = ProgrammaticRetryConfig.class // This uses the programmatic configuration class
-)
+/**
+ * Feign client for programmatic retry testing.
+ * This client is used to simulate errors and test the retry mechanism.
+ */
 public interface ProgrammaticRetryClient {
     @GetMapping("/api/errors")
     String simulateError(@RequestParam("errorName") String errorName, @RequestBody ErrorTestRequest errorConfig);

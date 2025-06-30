@@ -24,36 +24,39 @@ public class ResilienceAppController {
     }
 
     /**
-     * Test Service B with programmatic retry configuration
-     * Uses Resilience4j Feign decorator with custom RetryConfig
+     * Test PROGRAMMATIC retry configuration
+     * Uses Feign builder with custom RetryConfig (Database-friendly strategy)
      */
-    @PostMapping("/service-b/retry")
-    public ResponseEntity<Map<String, Object>> testServiceBRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
+    @PostMapping("/programmatic/retry")
+    public ResponseEntity<Map<String, Object>> testProgrammaticRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
         if (errorRequest == null) {
             errorRequest = createDefaultErrorRequest();
         }
 
-        logger.info("=== Testing Service B Retry Strategy ===");
+        logger.info("=== Testing PROGRAMMATIC Retry Strategy ===");
+        logger.info("Configuration: Feign Builder + Custom RetryConfig");
         logger.info("Error request: {}", errorRequest);
 
         try {
             String result = troubleMakerAdapter.getResourceFromServiceB(errorRequest);
-            logger.info("Service B call successful: {}", result);
+            logger.info("Programmatic retry call successful: {}", result);
 
             return ResponseEntity.ok(Map.of(
                     "status", "SUCCESS",
-                    "strategy", "Service B - Programmatic Retry",
+                    "strategy", "PROGRAMMATIC - Feign Builder + Database-friendly RetryConfig",
+                    "configuration", "4 attempts, exponential random backoff (200ms-10s)",
                     "result", result,
                     "timestamp", LocalDateTime.now()
             ));
 
         } catch (Exception e) {
-            logger.error("Service B call failed after all retries: {}", e.getMessage());
+            logger.error("Programmatic retry call failed after all retries: {}", e.getMessage());
 
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(Map.of(
                             "status", "FAILED",
-                            "strategy", "Service B - Programmatic Retry",
+                            "strategy", "PROGRAMMATIC - Feign Builder + Database-friendly RetryConfig",
+                            "configuration", "4 attempts, exponential random backoff (200ms-10s)",
                             "error", e.getMessage(),
                             "timestamp", LocalDateTime.now()
                     ));
@@ -61,36 +64,39 @@ public class ResilienceAppController {
     }
 
     /**
-     * Test Service C with @Qualifier annotation retry configuration
-     * Uses application.yml configuration with serviceCRetry qualifier
+     * Test @QUALIFIER retry configuration
+     * Uses @Qualifier annotation with YAML configuration
      */
-    @PostMapping("/service-c/retry")
-    public ResponseEntity<Map<String, Object>> testServiceCRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
+    @PostMapping("/qualifier/retry")
+    public ResponseEntity<Map<String, Object>> testQualifierRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
         if (errorRequest == null) {
             errorRequest = createDefaultErrorRequest();
         }
 
-        logger.info("=== Testing Service C Retry Strategy ===");
+        logger.info("=== Testing @QUALIFIER Retry Strategy ===");
+        logger.info("Configuration: @Qualifier + YAML Config");
         logger.info("Error request: {}", errorRequest);
 
         try {
             String result = troubleMakerAdapter.getResourceFromServiceC(errorRequest);
-            logger.info("Service C call successful: {}", result);
+            logger.info("Qualifier retry call successful: {}", result);
 
             return ResponseEntity.ok(Map.of(
                     "status", "SUCCESS",
-                    "strategy", "Service C - @Qualifier Retry (YAML Config)",
+                    "strategy", "@QUALIFIER - YAML Configuration",
+                    "configuration", "3 attempts, exponential backoff (1s with 2x multiplier)",
                     "result", result,
                     "timestamp", LocalDateTime.now()
             ));
 
         } catch (Exception e) {
-            logger.error("Service C call failed after all retries: {}", e.getMessage());
+            logger.error("Qualifier retry call failed after all retries: {}", e.getMessage());
 
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(Map.of(
                             "status", "FAILED",
-                            "strategy", "Service C - @Qualifier Retry (YAML Config)",
+                            "strategy", "@QUALIFIER - YAML Configuration",
+                            "configuration", "3 attempts, exponential backoff (1s with 2x multiplier)",
                             "error", e.getMessage(),
                             "timestamp", LocalDateTime.now()
                     ));
@@ -98,40 +104,108 @@ public class ResilienceAppController {
     }
 
     /**
-     * Test TroubleMaker with @Retry annotation
-     * Uses application.yml configuration with troubleMakerRetry
+     * Test @RETRY ANNOTATION configuration
+     * Uses @Retry annotation with YAML configuration
      */
-    @PostMapping("/trouble-maker/retry")
-    public ResponseEntity<Map<String, Object>> testTroubleMakerRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
+    @PostMapping("/annotation/retry")
+    public ResponseEntity<Map<String, Object>> testAnnotationRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
         if (errorRequest == null) {
             errorRequest = createDefaultErrorRequest();
         }
 
-        logger.info("=== Testing TroubleMaker Retry Strategy ===");
+        logger.info("=== Testing @RETRY ANNOTATION Strategy ===");
+        logger.info("Configuration: @Retry Annotation + YAML Config");
         logger.info("Error request: {}", errorRequest);
 
         try {
             String result = troubleMakerAdapter.callTroubleMakerWithError(errorRequest);
-            logger.info("TroubleMaker call successful: {}", result);
+            logger.info("Annotation retry call successful: {}", result);
 
             return ResponseEntity.ok(Map.of(
                     "status", "SUCCESS",
-                    "strategy", "TroubleMaker - @Retry Annotation (YAML Config)",
+                    "strategy", "@RETRY ANNOTATION - YAML Configuration",
+                    "configuration", "5 attempts, exponential backoff (500ms with 1.5x multiplier)",
                     "result", result,
                     "timestamp", LocalDateTime.now()
             ));
 
         } catch (Exception e) {
-            logger.error("TroubleMaker call failed after all retries: {}", e.getMessage());
+            logger.error("Annotation retry call failed after all retries: {}", e.getMessage());
 
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(Map.of(
                             "status", "FAILED",
-                            "strategy", "TroubleMaker - @Retry Annotation (YAML Config)",
+                            "strategy", "@RETRY ANNOTATION - YAML Configuration",
+                            "configuration", "5 attempts, exponential backoff (500ms with 1.5x multiplier)",
                             "error", e.getMessage(),
                             "timestamp", LocalDateTime.now()
                     ));
         }
+    }
+
+    /**
+     * Test all retry strategies in sequence
+     */
+    @PostMapping("/all/retry")
+    public ResponseEntity<Map<String, Object>> testAllRetryStrategies(@RequestBody(required = false) ErrorTestRequest errorRequest) {
+        if (errorRequest == null) {
+            errorRequest = createDefaultErrorRequest();
+        }
+
+        logger.info("=== Testing ALL Retry Strategies ===");
+        logger.info("Error request: {}", errorRequest);
+
+        Map<String, Object> results = Map.of(
+                "programmaticRetry", testProgrammaticRetry(errorRequest).getBody(),
+                "qualifierRetry", testQualifierRetry(errorRequest).getBody(),
+                "annotationRetry", testAnnotationRetry(errorRequest).getBody(),
+                "timestamp", LocalDateTime.now()
+        );
+
+        return ResponseEntity.ok(results);
+    }
+
+    /**
+     * Get current retry configurations info
+     */
+    @GetMapping("/info")
+    public ResponseEntity<Map<String, Object>> getRetryInfo() {
+        logger.info("=== Retry Configuration Info ===");
+
+        Map<String, Object> info = Map.of(
+                "strategies", Map.of(
+                        "programmatic", Map.of(
+                                "approach", "Feign Builder + Custom RetryConfig",
+                                "class", "ProgrammaticRetryConfig",
+                                "client", "ProgrammaticRetryClient",
+                                "strategy", "Database-friendly retry",
+                                "maxAttempts", 4,
+                                "intervalFunction", "Exponential Random Backoff (200ms-10s)",
+                                "endpoint", "POST /api/test/programmatic/retry"
+                        ),
+                        "qualifier", Map.of(
+                                "approach", "@Qualifier + YAML Configuration",
+                                "client", "QualifierRetryClient",
+                                "yamlKey", "qualifierRetryConfig",
+                                "maxAttempts", 3,
+                                "waitDuration", "1s with exponential backoff (2x multiplier)",
+                                "endpoint", "POST /api/test/qualifier/retry"
+                        ),
+                        "annotation", Map.of(
+                                "approach", "@Retry Annotation + YAML Configuration",
+                                "client", "AnnotationRetryService",
+                                "method", "@Retry(name = \"annotationRetryConfig\")",
+                                "yamlKey", "annotationRetryConfig",
+                                "maxAttempts", 5,
+                                "waitDuration", "500ms with exponential backoff (1.5x multiplier)",
+                                "endpoint", "POST /api/test/annotation/retry"
+                        )
+                ),
+                "allStrategies", "POST /api/test/all/retry",
+                "timestamp", LocalDateTime.now()
+        );
+
+        return ResponseEntity.ok(info);
     }
 
     /**
