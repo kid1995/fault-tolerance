@@ -26,10 +26,19 @@ resilience4j:
           - java.net.ConnectException
           - java.net.SocketTimeoutException
           - feign.RetryableException
-# Enable Resilience4j integration with Feign
-feign:
-  resilience4j:
-    enabled: true
+          - feign.FeignException
+      troubleMakerRetry:
+        max-attempts: 5
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 1.5
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - feign.RetryableException
+          - feign.FeignException
 app:
   serviceB:
+    url: http://localhost:8081
+  troubleMaker:
     url: http://localhost:8081

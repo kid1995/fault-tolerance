@@ -1,18 +1,14 @@
 package com.example.service_a.adapter.http.client;
 
-import com.example.service_a.config.service.FeignClientConfig4ServiceC;
 import com.example.service_a.model.ErrorTestRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(
-        name = "serviceC",
-        configuration = FeignClientConfig4ServiceC.class,
-        qualifiers = "serviceCRetry"  // This binds to the retry instance
-)
-public interface ServiceCClient {
+@FeignClient(name = "troubleMaker", url = "${app.troubleMaker.url}")
+public interface TroubleMakerClient {
+
     @GetMapping("/api/errors")
     String simulateError(@RequestParam("errorName") String errorName, @RequestBody ErrorTestRequest errorConfig);
 }
