@@ -1,0 +1,224 @@
+{
+  "name": "Fault Tolerance Retry Strategies",
+  "version": "1.0.0",
+  "description": "Test collection for different retry configuration approaches in Spring Boot",
+  "baseUrl": "http://localhost:8080",
+  "variables": {
+    "baseUrl": "http://localhost:8080",
+    "troubleMakerUrl": "http://localhost:8081"
+  },
+  "requests": [
+    {
+      "name": "1. Get Retry Configuration Info",
+      "method": "GET",
+      "url": "{{baseUrl}}/api/test/info",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "description": "Get information about all three retry configuration approaches"
+    },
+    {
+      "name": "2. Test Programmatic Retry (Feign Builder)",
+      "method": "POST",
+      "url": "{{baseUrl}}/api/test/programmatic/retry",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "errorCode": "503",
+        "errorRate": 0.8,
+        "responseDelayMs": 500,
+        "retryAfterSeconds": 5,
+        "timeoutDelayMs": 5000,
+        "enabled": true,
+        "description": "Test programmatic retry with 80% error rate"
+      },
+      "description": "Test service with programmatic retry configuration using Feign builder and custom RetryConfig"
+    },
+    {
+      "name": "3. Test @Qualifier Retry (YAML Config)",
+      "method": "POST",
+      "url": "{{baseUrl}}/api/test/qualifier/retry",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "errorCode": "503",
+        "errorRate": 0.7,
+        "responseDelayMs": 800,
+        "retryAfterSeconds": 3,
+        "timeoutDelayMs": 5000,
+        "enabled": true,
+        "description": "Test qualifier retry with 70% error rate"
+      },
+      "description": "Test service with @Qualifier retry configuration from YAML"
+    },
+    {
+      "name": "4. Test @Retry Annotation (YAML Config)",
+      "method": "POST",
+      "url": "{{baseUrl}}/api/test/annotation/retry",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "errorCode": "503",
+        "errorRate": 0.9,
+        "responseDelayMs": 300,
+        "retryAfterSeconds": 2,
+        "timeoutDelayMs": 5000,
+        "enabled": true,
+        "description": "Test annotation retry with 90% error rate"
+      },
+      "description": "Test service with @Retry annotation configuration from YAML"
+    },
+    {
+      "name": "5. Test All Retry Strategies",
+      "method": "POST",
+      "url": "{{baseUrl}}/api/test/all/retry",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "errorCode": "503",
+        "errorRate": 0.6,
+        "responseDelayMs": 1000,
+        "retryAfterSeconds": 10,
+        "timeoutDelayMs": 5000,
+        "enabled": true,
+        "description": "Test all retry strategies with 60% error rate"
+      },
+      "description": "Test all three retry configuration approaches in sequence"
+    },
+    {
+      "name": "6. Compare Strategies - Low Error Rate",
+      "method": "POST",
+      "url": "{{baseUrl}}/api/test/all/retry",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "errorCode": "503",
+        "errorRate": 0.2,
+        "responseDelayMs": 200,
+        "retryAfterSeconds": 5,
+        "timeoutDelayMs": 5000,
+        "enabled": true,
+        "description": "Compare all strategies with low error rate (20%)"
+      },
+      "description": "Compare all retry strategies with low error rate to see successful retries"
+    },
+    {
+      "name": "7. Test Programmatic - High Success",
+      "method": "POST",
+      "url": "{{baseUrl}}/api/test/programmatic/retry",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "errorCode": "503",
+        "errorRate": 0.1,
+        "responseDelayMs": 100,
+        "retryAfterSeconds": 5,
+        "timeoutDelayMs": 5000,
+        "enabled": true,
+        "description": "Test programmatic approach with high success rate (10% errors)"
+      },
+      "description": "Test programmatic retry configuration with high success rate"
+    },
+    {
+      "name": "8. Test Different Error Codes",
+      "method": "POST",
+      "url": "{{baseUrl}}/api/test/annotation/retry",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "errorCode": "500",
+        "errorRate": 0.8,
+        "responseDelayMs": 500,
+        "retryAfterSeconds": 5,
+        "timeoutDelayMs": 5000,
+        "enabled": true,
+        "description": "Test annotation approach with HTTP 500 error"
+      },
+      "description": "Test @Retry annotation with different error code (500)"
+    },
+    {
+      "name": "9. Test with Errors Disabled",
+      "method": "POST",
+      "url": "{{baseUrl}}/api/test/qualifier/retry",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "errorCode": "503",
+        "errorRate": 1.0,
+        "responseDelayMs": 100,
+        "retryAfterSeconds": 5,
+        "timeoutDelayMs": 5000,
+        "enabled": false,
+        "description": "Test qualifier approach with errors disabled"
+      },
+      "description": "Test @Qualifier retry with errors disabled (should succeed)"
+    },
+    {
+      "name": "10. Test with Default Values",
+      "method": "POST",
+      "url": "{{baseUrl}}/api/test/all/retry",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "description": "Test all retry strategies with default error configuration (no body)"
+    },
+    {
+      "name": "11. Verify TroubleMaker Direct",
+      "method": "GET",
+      "url": "{{troubleMakerUrl}}/api/errors?errorName=503",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "errorRate": 1.0,
+        "responseDelayMs": 500,
+        "retryAfterSeconds": 30,
+        "timeoutDelayMs": 5000,
+        "enabled": true
+      },
+      "description": "Direct call to TroubleMaker service to verify it's working"
+    }
+  ],
+  "folders": [
+    {
+      "name": "Configuration Info",
+      "requests": ["1. Get Retry Configuration Info"]
+    },
+    {
+      "name": "Individual Strategy Tests",
+      "requests": [
+        "2. Test Programmatic Retry (Feign Builder)",
+        "3. Test @Qualifier Retry (YAML Config)",
+        "4. Test @Retry Annotation (YAML Config)"
+      ]
+    },
+    {
+      "name": "Comprehensive Strategy Comparison",
+      "requests": [
+        "5. Test All Retry Strategies",
+        "6. Compare Strategies - Low Error Rate"
+      ]
+    },
+    {
+      "name": "Edge Case Tests",
+      "requests": [
+        "7. Test Programmatic - High Success",
+        "8. Test Different Error Codes",
+        "9. Test with Errors Disabled",
+        "10. Test with Default Values"
+      ]
+    },
+    {
+      "name": "Service Verification",
+      "requests": ["11. Verify TroubleMaker Direct"]
+    }
+  ]
+}

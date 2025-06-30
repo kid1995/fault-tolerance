@@ -1,0 +1,33 @@
+server:
+  port: 8080
+spring:
+  main:
+    banner-mode: off
+  application:
+    name: resilience-app
+resilience4j:
+  retry:
+    instances:
+      qualifierRetryConfig:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - feign.RetryableException
+          - feign.FeignException
+      annotationRetryConfig:
+        max-attempts: 5
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 1.5
+        retry-exceptions:
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - feign.RetryableException
+          - feign.FeignException
+app:
+  troubleMaker:
+    url: http://localhost:8081
