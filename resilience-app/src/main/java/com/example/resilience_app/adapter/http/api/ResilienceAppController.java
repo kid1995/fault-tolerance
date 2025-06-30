@@ -13,13 +13,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/test")
-public class FaultToleranceTestController {
+public class ResilienceAppController {
 
-    private static final Logger logger = LoggerFactory.getLogger(FaultToleranceTestController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResilienceAppController.class);
 
     private final TroubleMakerAdapter troubleMakerAdapter;
 
-    public FaultToleranceTestController(TroubleMakerAdapter troubleMakerAdapter) {
+    public ResilienceAppController(TroubleMakerAdapter troubleMakerAdapter) {
         this.troubleMakerAdapter = troubleMakerAdapter;
     }
 
