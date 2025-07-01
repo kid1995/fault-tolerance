@@ -14,7 +14,6 @@ resilience4j:
     configs:
       default:
         max-attempts: 1
-        wait-duration: 1000ms
     instances:
       # Used by @Retry annotation approach in TroubleMakerAdapter
       annotationRetryConfig:

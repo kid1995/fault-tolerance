@@ -183,8 +183,7 @@ public class ResilienceAppController {
         // Try to parse as JSON and return formatted object
         try {
             if (result.trim().startsWith("{") || result.trim().startsWith("[")) {
-                Object parsedJson = objectMapper.readValue(result, Object.class);
-                return parsedJson;
+                return objectMapper.readValue(result, Object.class);
             }
         } catch (JsonProcessingException e) {
             // If not valid JSON, continue with string formatting

@@ -5,7 +5,7 @@ spring:
   main:
     banner-mode: off
   application:
-    name: service-b
+    name: trouble-maker
 
 # Custom application properties
 app:

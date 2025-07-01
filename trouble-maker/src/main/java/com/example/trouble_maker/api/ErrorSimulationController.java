@@ -37,11 +37,12 @@ public class ErrorSimulationController {
                     .body(Map.of("error", "Missing required parameter: errorCode"));
         }
         String errorCode = requestParams.get("errorCode");
-        logger.info("Simulating error code {} - config: {}",errorCode, errorConfig.toString());
+
 
         HttpStatus httpErrorStatus = errorConfigService.getErrorCode(errorCode);
-
+        logger.info("🎲 Using error rate to random if error should be simulated or return succes: {}", errorConfig.getErrorRate());
         if (errorConfigService.shouldSimulateError(errorConfig)) {
+            logger.info("❌ Simulating error code {} - config: {}",errorCode, errorConfig);
             errorConfigService.simulateDelay(errorConfig);
 
             Map<String, Object> errorResponse = Map.of(
@@ -55,7 +56,7 @@ public class ErrorSimulationController {
                     .header("Retry-After", String.valueOf(errorConfig.getRetryAfterSeconds()))
                     .body(errorResponse);
         }
-
+        logger.info("✅ Simulating success response - no error");
         return successResponse("service available - no error");
     }
 
