@@ -38,7 +38,7 @@ public class ResilienceAppController {
         logger.info("Error request: {}", errorRequest);
 
         try {
-            String result = troubleMakerAdapter.getResourceFromServiceB(errorRequest);
+            String result = troubleMakerAdapter.simulateErrorWithProgrammaticRetry(errorRequest);
             logger.info("Programmatic retry call successful: {}", result);
 
             return ResponseEntity.ok(Map.of(
@@ -78,7 +78,7 @@ public class ResilienceAppController {
         logger.info("Error request: {}", errorRequest);
 
         try {
-            String result = troubleMakerAdapter.getResourceFromServiceC(errorRequest);
+            String result = troubleMakerAdapter.simulateErrorWithQualifierRetry(errorRequest);
             logger.info("Qualifier retry call successful: {}", result);
 
             return ResponseEntity.ok(Map.of(
@@ -118,7 +118,7 @@ public class ResilienceAppController {
         logger.info("Error request: {}", errorRequest);
 
         try {
-            String result = troubleMakerAdapter.callTroubleMakerWithError(errorRequest);
+            String result = troubleMakerAdapter.simulateErrorWithAnnotationRetry(errorRequest);
             logger.info("Annotation retry call successful: {}", result);
 
             return ResponseEntity.ok(Map.of(

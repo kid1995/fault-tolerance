@@ -31,12 +31,10 @@ public class TroubleMakerAdapter {
      * Call service with PROGRAMMATIC retry configuration
      * Uses Feign builder with custom RetryConfig (Database-friendly strategy)
      */
-    public String getResourceFromServiceB(ErrorTestRequest errorRequest) {
-        logger.info("🔧 [PROGRAMMATIC-RETRY] Starting call with FEIGN BUILDER + RetryConfig");
-        logger.info("🔧 [PROGRAMMATIC-RETRY] Strategy: Database-friendly (4 attempts, exponential random backoff)");
-        logger.info("🔧 [PROGRAMMATIC-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
+    public String simulateErrorWithProgrammaticRetry(ErrorTestRequest errorRequest) {
+        logger.info("👨‍💻 [PROGRAMMATIC-RETRY] Starting call with FEIGN BUILDER + RetryConfig");
+        logger.info("⚙️ [PROGRAMMATIC-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
                 errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
-
         long startTime = System.currentTimeMillis();
         try {
             String result = programmaticRetryClient.simulateError(errorRequest.getErrorCode(), errorRequest);
@@ -57,10 +55,9 @@ public class TroubleMakerAdapter {
      * Call service with @QUALIFIER retry configuration
      * Uses @Qualifier annotation with YAML configuration
      */
-    public String getResourceFromServiceC(ErrorTestRequest errorRequest) {
+    public String simulateErrorWithQualifierRetry(ErrorTestRequest errorRequest) {
         logger.info("🏷️ [QUALIFIER-RETRY] Starting call with @QUALIFIER + YAML configuration");
-        logger.info("🏷️ [QUALIFIER-RETRY] Strategy: qualifierRetryConfig from application.yml");
-        logger.info("🏷️ [QUALIFIER-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
+        logger.info("⚙️ [QUALIFIER-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
                 errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
 
         long startTime = System.currentTimeMillis();
@@ -84,10 +81,9 @@ public class TroubleMakerAdapter {
      * Uses @Retry annotation with YAML configuration
      */
     @Retry(name = "annotationRetryConfig")
-    public String callTroubleMakerWithError(ErrorTestRequest errorRequest) {
+    public String simulateErrorWithAnnotationRetry(ErrorTestRequest errorRequest) {
         logger.info("📝 [ANNOTATION-RETRY] Starting call with @RETRY ANNOTATION + YAML configuration");
-        logger.info("📝 [ANNOTATION-RETRY] Strategy: annotationRetryConfig from application.yml");
-        logger.info("📝 [ANNOTATION-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
+        logger.info("⚙️ [ANNOTATION-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
                 errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
 
         long startTime = System.currentTimeMillis();
@@ -102,7 +98,6 @@ public class TroubleMakerAdapter {
             long duration = System.currentTimeMillis() - startTime;
             logger.error("🔔 [ANNOTATION-RETRY] Retry attempt FAILED after {}ms: {} - {}",
                     duration, e.getClass().getSimpleName(), e.getMessage());
-            // Re-throw to trigger next retry attempt
             throw e;
         }
     }

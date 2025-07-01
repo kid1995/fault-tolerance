@@ -28,7 +28,7 @@ public class ErrorSimulationController {
      * 503 Service Unavailable
      * Simulates temporary overload or scheduled maintenance
      */
-    @GetMapping
+    @PostMapping
     public ResponseEntity<Map<String, Object>> serviceUnavailable(
             @RequestParam Map<String, String> requestParams,
             @RequestBody ErrorConfig errorConfig) {

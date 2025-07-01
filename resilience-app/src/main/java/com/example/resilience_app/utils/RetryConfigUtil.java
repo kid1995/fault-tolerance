@@ -21,43 +21,7 @@ public final class RetryConfigUtil {
                 .build();
     }
 
-    public static RetryConfig createFastRetry() {
-        return RetryConfig.custom()
-                .maxAttempts(2)
-                .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofMillis(500), 1.5))
-                .retryExceptions(
-                        java.net.ConnectException.class,
-                        java.net.SocketTimeoutException.class,
-                        feign.RetryableException.class
-                )
-                .build();
-    }
-
-    public static RetryConfig createRobustRetry() {
-        return RetryConfig.custom()
-                .maxAttempts(5)
-                .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(2), 2.5))
-                .retryExceptions(
-                        java.net.ConnectException.class,
-                        java.net.SocketTimeoutException.class,
-                        feign.RetryableException.class
-                )
-                .build();
-    }
-
-    public static RetryConfig createGentleRetry() {
-        return RetryConfig.custom()
-                .maxAttempts(3)
-                .intervalFunction(IntervalFunction.of(Duration.ofSeconds(5))) // Fixed interval
-                .retryExceptions(
-                        java.net.ConnectException.class,
-                        java.net.SocketTimeoutException.class,
-                        feign.RetryableException.class
-                )
-                .build();
-    }
-
-    public static RetryConfig createDatabaseRetry() {
+    public static RetryConfig createRandomBackoffRetry() {
         return RetryConfig.custom()
                 .maxAttempts(4)
                 .intervalFunction(IntervalFunction.ofExponentialRandomBackoff(
@@ -74,7 +38,7 @@ public final class RetryConfigUtil {
                 .build();
     }
 
-    public static RetryConfig createRateLimitRetry() {
+    public static RetryConfig createCustomBackoff() {
         return RetryConfig.custom()
                 .maxAttempts(3)
                 .intervalFunction(createCustomLinearInterval())
