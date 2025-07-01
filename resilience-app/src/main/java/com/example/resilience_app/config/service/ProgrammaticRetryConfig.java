@@ -47,15 +47,7 @@ public class ProgrammaticRetryConfig {
         // Create retry instance and register it with RetryRegistry
         Retry retry = retryRegistry.retry(clientName, retryConfig);
         retry.getEventPublisher().onRetry(event -> {logger.info( "event: {}", event);});
-        retry.getEventPublisher().onError(event -> {
-            logger.error("❌ [PROGRAMMATIC-RETRY] Error in retry '{}': {} - {}",
-                    event.getName(),
-                    event.getLastThrowable().getClass().getSimpleName(),
-                    event.getLastThrowable().getMessage());
-
-        });
         retryRegistry.addConfiguration(clientName, retryConfig);
-
         logger.info("✅ [PROGRAMMATIC-RETRY] Retry instance '{}' registered with RetryRegistry", clientName);
 
         return retry;
