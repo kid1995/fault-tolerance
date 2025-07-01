@@ -60,33 +60,21 @@ public class ResilienceAppController {
         String strategyDescription = buildProgrammaticStrategyDescription();
         String configurationDescription = buildProgrammaticConfigurationDescription();
 
-        try {
-            logger.info("👨‍💻 [PROGRAMMATIC-RETRY] Starting call with FEIGN BUILDER + RetryConfig");
-            logger.info("⚙️ [PROGRAMMATIC-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
-                    errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
-            String result = troubleMakerAdapter.simulateErrorWithProgrammaticRetry(errorRequest);
-            logger.info("Programmatic retry call successful: {}", result);
 
-            return ResponseEntity.ok(Map.of(
-                    "status", "SUCCESS",
-                    "strategy", strategyDescription,
-                    "configuration", configurationDescription,
-                    "result", formatResult(result),
-                    "timestamp", LocalDateTime.now()
-            ));
+        logger.info("👨‍💻 [PROGRAMMATIC-RETRY] Starting call with FEIGN BUILDER + RetryConfig");
+        logger.info("⚙️ [PROGRAMMATIC-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
+                errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
+        String result = troubleMakerAdapter.simulateErrorWithProgrammaticRetry(errorRequest);
+        logger.info("Programmatic retry call successful: {}", result);
 
-        } catch (Exception e) {
-            logger.error("Programmatic retry call failed after all retries: {}", e.getMessage());
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "strategy", strategyDescription,
+                "configuration", configurationDescription,
+                "result", formatResult(result),
+                "timestamp", LocalDateTime.now()
+        ));
 
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of(
-                            "status", "FAILED",
-                            "strategy", strategyDescription,
-                            "configuration", configurationDescription,
-                            "error", e.getMessage(),
-                            "timestamp", LocalDateTime.now()
-                    ));
-        }
     }
 
     /**
@@ -106,33 +94,22 @@ public class ResilienceAppController {
         String strategyDescription = "@RETRY ANNOTATION - YAML Configuration";
         String configurationDescription = buildAnnotationConfigurationDescription();
 
-        try {
-            logger.info("＠ [ANNOTATION-RETRY] Starting call with @RETRY ANNOTATION + YAML configuration");
-            logger.info("⚙️ [ANNOTATION-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
-                    errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
-            String result = troubleMakerAdapter.simulateErrorWithAnnotationRetry(errorRequest);
-            logger.info("Annotation retry call successful: {}", result);
 
-            return ResponseEntity.ok(Map.of(
-                    "status", "SUCCESS",
-                    "strategy", strategyDescription,
-                    "configuration", configurationDescription,
-                    "result", formatResult(result),
-                    "timestamp", LocalDateTime.now()
-            ));
+        logger.info("＠ [ANNOTATION-RETRY] Starting call with @RETRY ANNOTATION + YAML configuration");
+        logger.info("⚙️ [ANNOTATION-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
+                errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
+        String result = troubleMakerAdapter.simulateErrorWithAnnotationRetry(errorRequest);
+        logger.info("Annotation retry call successful: {}", result);
 
-        } catch (Exception e) {
-            logger.error("Annotation retry call failed after all retries: {}", e.getMessage());
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "strategy", strategyDescription,
+                "configuration", configurationDescription,
+                "result", formatResult(result),
+                "timestamp", LocalDateTime.now()
+        ));
 
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of(
-                            "status", "FAILED",
-                            "strategy", strategyDescription,
-                            "configuration", configurationDescription,
-                            "error", e.getMessage(),
-                            "timestamp", LocalDateTime.now()
-                    ));
-        }
+
     }
 
     /**
@@ -180,16 +157,14 @@ public class ResilienceAppController {
             return "Empty response";
         }
 
-        // Try to parse as JSON and return formatted object
         try {
             if (result.trim().startsWith("{") || result.trim().startsWith("[")) {
                 return objectMapper.readValue(result, Object.class);
             }
         } catch (JsonProcessingException e) {
-            // If not valid JSON, continue with string formatting
+            logger.warn("Failed to parse result as JSON: {}", e.getMessage());
         }
 
-        // If it's a plain string, return it as a formatted object for better readability
         Map<String, Object> formattedResult = new LinkedHashMap<>();
         formattedResult.put("message", result);
         formattedResult.put("type", "text/plain");

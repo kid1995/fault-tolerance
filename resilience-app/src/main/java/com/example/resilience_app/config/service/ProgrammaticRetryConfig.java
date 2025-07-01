@@ -1,6 +1,8 @@
 package com.example.resilience_app.config.service;
 
 import com.example.resilience_app.adapter.http.client.ProgrammaticRetryClient;
+import com.example.resilience_app.adapter.http.client.ProgrammaticRetryFallBack;
+import com.example.resilience_app.model.ErrorTestRequest;
 import com.example.resilience_app.utils.RetryConfigUtil;
 import com.example.resilience_app.utils.RetryEventListener;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +24,8 @@ import org.springframework.cloud.openfeign.support.SpringMvcContract;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+
+import java.time.LocalDateTime;
 
 @Configuration
 public class ProgrammaticRetryConfig {
@@ -119,6 +123,7 @@ public class ProgrammaticRetryConfig {
     public ProgrammaticRetryClient programmaticRetryClient(Retry programmaticRetry, SpringMvcContract springContract) {
         FeignDecorators decorators = FeignDecorators.builder()
                 .withRetry(programmaticRetry)
+                .withFallbackFactory(ProgrammaticRetryFallBack::new)
                 .build();
 
         return Feign.builder()
