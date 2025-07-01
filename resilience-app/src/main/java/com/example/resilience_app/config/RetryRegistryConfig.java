@@ -6,7 +6,6 @@ import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 
@@ -41,14 +40,6 @@ public class RetryRegistryConfig {
                     String retryName = entryRemovedEvent.getRemovedEntry().getName();
                     logger.info("➖ [RETRY_REGISTRY_CONFIG] Retry instance removed: {}", retryName);
                 });
-    }
-
-    /**
-     * Bean to expose RetryEventListener for monitoring endpoints
-     */
-    @Bean
-    public RetryEventListener retryEventListener() {
-        return retryEventListener;
     }
 
     /**

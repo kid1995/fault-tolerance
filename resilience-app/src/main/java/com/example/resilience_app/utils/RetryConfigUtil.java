@@ -2,7 +2,11 @@ package com.example.resilience_app.utils;
 
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.RetryConfig;
+
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.time.Duration;
+import java.util.Set;
 
 public final class RetryConfigUtil {
 
@@ -14,9 +18,19 @@ public final class RetryConfigUtil {
                 .maxAttempts(3)
                 .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(1), 2.0))
                 .retryExceptions(
-                        java.net.ConnectException.class,
-                        java.net.SocketTimeoutException.class,
-                        feign.RetryableException.class
+                        java.net.ConnectException.class,           // Connection refused
+                        java.net.SocketTimeoutException.class,     // Socket timeout
+                        java.net.SocketException.class,            // General socket errors
+                        java.net.UnknownHostException.class,       // DNS resolution failures
+                        java.io.IOException.class,                 // General I/O errors
+
+                        // Feign specific exceptions
+                        feign.RetryableException.class,            // Feign retryable errors
+                        feign.FeignException.class,                // All Feign exceptions
+
+                        // Database exceptions (since this is database-friendly)
+                        java.sql.SQLException.class,
+                        java.sql.SQLTransientException.class
                 )
                 .build();
     }
@@ -31,9 +45,19 @@ public final class RetryConfigUtil {
                         Duration.ofSeconds(10)   // max interval
                 ))
                 .retryExceptions(
+                        java.net.ConnectException.class,           // Connection refused
+                        java.net.SocketTimeoutException.class,     // Socket timeout
+                        java.net.SocketException.class,            // General socket errors
+                        java.net.UnknownHostException.class,       // DNS resolution failures
+                        java.io.IOException.class,                 // General I/O errors
+
+                        // Feign specific exceptions
+                        feign.RetryableException.class,            // Feign retryable errors
+                        feign.FeignException.class,                // All Feign exceptions
+
+                        // Database exceptions (since this is database-friendly)
                         java.sql.SQLException.class,
-                        java.net.ConnectException.class,
-                        java.net.SocketTimeoutException.class
+                        java.sql.SQLTransientException.class
                 )
                 .build();
     }
@@ -43,9 +67,19 @@ public final class RetryConfigUtil {
                 .maxAttempts(3)
                 .intervalFunction(createCustomLinearInterval())
                 .retryExceptions(
-                        java.net.ConnectException.class,
-                        java.net.SocketTimeoutException.class,
-                        feign.RetryableException.class
+                        java.net.ConnectException.class,           // Connection refused
+                        java.net.SocketTimeoutException.class,     // Socket timeout
+                        java.net.SocketException.class,            // General socket errors
+                        java.net.UnknownHostException.class,       // DNS resolution failures
+                        java.io.IOException.class,                 // General I/O errors
+
+                        // Feign specific exceptions
+                        feign.RetryableException.class,            // Feign retryable errors
+                        feign.FeignException.class,                // All Feign exceptions
+
+                        // Database exceptions (since this is database-friendly)
+                        java.sql.SQLException.class,
+                        java.sql.SQLTransientException.class
                 )
                 .build();
     }
