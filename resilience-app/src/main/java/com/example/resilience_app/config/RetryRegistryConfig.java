@@ -41,14 +41,4 @@ public class RetryRegistryConfig {
                     logger.info("➖ [RETRY_REGISTRY_CONFIG] Retry instance removed: {}", retryName);
                 });
     }
-
-    /**
-     * Spring event listener to handle application-level retry events
-     * This catches any retry events published as Spring events
-     */
-    @EventListener
-    public void handleRetryEvent(RetryEvent retryEvent) {
-        // This will catch any retry events published as Spring events
-        retryEventListener.onRetryEvent(retryEvent);
-    }
 }
