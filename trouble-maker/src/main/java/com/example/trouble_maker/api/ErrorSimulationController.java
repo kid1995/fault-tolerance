@@ -32,11 +32,11 @@ public class ErrorSimulationController {
     public ResponseEntity<Map<String, Object>> serviceUnavailable(
             @RequestParam Map<String, String> requestParams,
             @RequestBody ErrorConfig errorConfig) {
-        if (!requestParams.containsKey("errorName")) {
+        if (!requestParams.containsKey("errorCode")) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Missing required parameter: errorName"));
+                    .body(Map.of("error", "Missing required parameter: errorCode"));
         }
-        String errorCode = requestParams.get("errorName");
+        String errorCode = requestParams.get("errorCode");
         logger.info("Simulating error code {} - config: {}",errorCode, errorConfig.toString());
 
         HttpStatus httpErrorStatus = errorConfigService.getErrorCode(errorCode);
