@@ -13,10 +13,13 @@ public final class RetryConfigUtil {
     private RetryConfigUtil() {
     }
 
-    public static RetryConfig createStandardRetry() {
+    public static RetryConfig createStandardRetry(int maxAttempts,
+                                                  long initialDelay, // in milliseconds
+                                                  Double multiplier,
+                                                  Set<Class<? extends Throwable>> retryExceptions ) {
         return RetryConfig.custom()
-                .maxAttempts(3)
-                .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(1), 2.0))
+                .maxAttempts(maxAttempts)
+                .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(initialDelay), multiplier))
                 .retryExceptions(
                         java.net.ConnectException.class,           // Connection refused
                         java.net.UnknownHostException.class,       // DNS resolution failures
@@ -29,14 +32,20 @@ public final class RetryConfigUtil {
                 .build();
     }
 
-    public static RetryConfig createRandomBackoffRetry() {
+    public static RetryConfig createRandomBackoffRetry(
+            int maxAttempts,
+            long initialInterval,
+            double multiplier,
+            double randomizationFactor,
+            long maxInterval
+    ) {
         return RetryConfig.custom()
-                .maxAttempts(4)
+                .maxAttempts(maxAttempts)
                 .intervalFunction(IntervalFunction.ofExponentialRandomBackoff(
-                        Duration.ofMillis(200),  // initial interval
-                        2.0,                     // multiplier
-                        0.1,                     // randomization factor
-                        Duration.ofSeconds(10)   // max interval
+                        Duration.ofMillis(initialInterval),  // initial interval
+                        multiplier,                     // multiplier
+                        randomizationFactor,                     // randomization factor
+                        Duration.ofSeconds(maxInterval)   // max interval
                 ))
                 .retryExceptions(
                         java.net.ConnectException.class,           // Connection refused

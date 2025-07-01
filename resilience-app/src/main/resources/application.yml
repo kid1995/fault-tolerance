@@ -16,22 +16,8 @@ resilience4j:
   retry:
     configs:
       default:
-        max-attempts: 15
-        wait-duration: 1s
-        enable-exponential-backoff: true
-        exponential-backoff-multiplier: 2
-        retry-exceptions:
-          - java.net.ConnectException
-          - java.net.SocketTimeoutException
-          - java.net.SocketException
-          - java.net.UnknownHostException
-          - java.io.IOException
-          - feign.RetryableException
-          - feign.FeignException
-          - feign.FeignException.ServiceUnavailable
-          - feign.FeignException.InternalServerError
-          - feign.FeignException.BadGateway
-          - feign.FeignException.GatewayTimeout
+        max-attempts: 1
+        wait-duration: 1000ms
     instances:
       # Used by @Retry annotation approach in TroubleMakerAdapter
       annotationRetryConfig:
@@ -56,3 +42,37 @@ resilience4j:
 app:
   troubleMaker:
     url: http://localhost:8081
+  programmaticRetryConfig:
+    max-attempts: 5
+    # Strategy options: standard-exponential, random-backoff, custom-interval
+    # strategy: "standard-exponential"
+    # initial-interval: 500ms
+    # exponential-backoff-multiplier: 2.0
+
+    #final long interval = of(initialIntervalMillis, x -> (long) (x * multiplier))
+    #.apply(attempt);
+    #return (long) randomize(interval, randomizationFactor);
+    strategy: "random-backoff"
+    initial-interval: 200ms
+    exponential-backoff-multiplier: 1.5
+    randomization-factor: 0.5
+    maxInterval: 5000ms
+
+    # strategy: "custom-interval"
+
+    retry-exceptions:
+      - java.net.ConnectException
+      - java.net.SocketTimeoutException
+      - java.net.SocketException
+      - java.net.UnknownHostException
+      - java.io.IOException
+      - feign.RetryableException
+      - feign.FeignException
+      - feign.FeignException.ServiceUnavailable
+      - feign.FeignException.InternalServerError
+      - feign.FeignException.BadGateway
+      - feign.FeignException.GatewayTimeout
+
+
+    # Custom application properties
+

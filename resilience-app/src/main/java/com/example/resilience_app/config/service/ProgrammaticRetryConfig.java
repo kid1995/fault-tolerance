@@ -43,7 +43,13 @@ public class ProgrammaticRetryConfig {
     public Retry programmaticRetry() {
         logger.info("🔧 [PROGRAMMATIC-RETRY] Creating retry instance: {}", clientName);
 
-        RetryConfig retryConfig = RetryConfigUtil.createRandomBackoffRetry();
+        RetryConfig retryConfig = RetryConfigUtil.createRandomBackoffRetry(
+                5, // max attempts
+                1000, // initial interval in milliseconds
+                1.5, // multiplier
+                0.5, // randomization factor
+                10 // max interval in seconds
+        );
 
         // Create a retry instance and register it with RetryRegistry
         Retry retry = retryRegistry.retry(clientName, retryConfig);
