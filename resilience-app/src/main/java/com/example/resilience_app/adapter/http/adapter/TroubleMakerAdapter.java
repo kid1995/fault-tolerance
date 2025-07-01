@@ -27,9 +27,6 @@ public class TroubleMakerAdapter {
      * Uses Feign builder with custom RetryConfig (Database-friendly strategy)
      */
     public String simulateErrorWithProgrammaticRetry(ErrorTestRequest errorRequest) {
-        logger.info("👨‍💻 [PROGRAMMATIC-RETRY] Starting call with FEIGN BUILDER + RetryConfig");
-        logger.info("⚙️ [PROGRAMMATIC-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
-                errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
         long startTime = System.currentTimeMillis();
         try {
             String result = programmaticRetryClient.simulateError(errorRequest.getErrorCode(), errorRequest);
@@ -52,10 +49,6 @@ public class TroubleMakerAdapter {
      */
     @Retry(name = "annotationRetryConfig")
     public String simulateErrorWithAnnotationRetry(ErrorTestRequest errorRequest) {
-        logger.info("📝 [ANNOTATION-RETRY] Starting call with @RETRY ANNOTATION + YAML configuration");
-        logger.info("⚙️ [ANNOTATION-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
-                errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
-
         long startTime = System.currentTimeMillis();
         String result = annotationRetryService.simulateError(errorRequest.getErrorCode(), errorRequest);
         long duration = System.currentTimeMillis() - startTime;

@@ -35,11 +35,12 @@ public final class RetryEventListener {
     }
 
     private static void handleRetryAttempt(RetryEvent retryEvent) {
-        logger.warn("🔄 [RETRY-ATTEMPT] Name: {} | Attempt: {} | Exception: {} | Message: {}",
+        logger.warn("🔄 [RETRY-ATTEMPT] Name: {} | Attempt: {} | Exception: {} ",
                 retryEvent.getName(),
                 retryEvent.getNumberOfRetryAttempts(),
-                retryEvent.getLastThrowable().getClass().getSimpleName(),
-                retryEvent.getLastThrowable().getMessage());
+                retryEvent.getLastThrowable().getClass().getSimpleName()
+        );
+        logger.warn("📧 [RETRY-ATTEMPT] Message: {}", retryEvent.getLastThrowable().getMessage());
     }
 
     private static void handleSuccess(RetryEvent retryEvent) {
@@ -54,17 +55,19 @@ public final class RetryEventListener {
     }
 
     private static void handleRetryError(RetryEvent retryEvent) {
-        logger.error("❌ [RETRY-EXHAUSTED] Name: {} | All {} attempts failed | Final Exception: {} | Message: {}",
+        logger.error("❌ [RETRY-EXHAUSTED] Name: {} | All {} attempts failed | Final Exception: {}",
                 retryEvent.getName(),
                 retryEvent.getNumberOfRetryAttempts(),
-                retryEvent.getLastThrowable().getClass().getSimpleName(),
-                retryEvent.getLastThrowable().getMessage());
+                retryEvent.getLastThrowable().getClass().getSimpleName())
+        ;
+        logger.warn("❌ [RETRY-EXHAUSTED] Message: {}", retryEvent.getLastThrowable().getMessage());
     }
 
     private static void handleIgnoredError(RetryEvent retryEvent) {
-        logger.debug("⚠️ [RETRY-IGNORED] Name: {} | Exception ignored (not retryable): {} | Message: {}",
+        logger.debug("⚠️ [RETRY-IGNORED] Name: {} | Exception ignored (not retryable): {}",
                 retryEvent.getName(),
-                retryEvent.getLastThrowable().getClass().getSimpleName(),
-                retryEvent.getLastThrowable().getMessage());
+                retryEvent.getLastThrowable().getClass().getSimpleName()
+        );
+        logger.warn("Message: {}", retryEvent.getLastThrowable().getMessage());
     }
 }

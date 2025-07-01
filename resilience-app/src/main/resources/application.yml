@@ -6,10 +6,7 @@ spring:
     banner-mode: off
   application:
     name: resilience-app
-  # Enable AOP for annotations
-  aop:
-    auto: true
-    proxy-target-class: true
+
 
 # Resilience4j Configuration
 resilience4j:
@@ -38,26 +35,28 @@ resilience4j:
           - feign.FeignException.BadGateway
           - feign.FeignException.GatewayTimeout
 
-# Application URLs
+# Application URLs and Configuration
 app:
   troubleMaker:
     url: http://localhost:8081
+
+  # Programmatic Retry Configuration
   programmaticRetryConfig:
     max-attempts: 5
     # Strategy options: standard-exponential, random-backoff, custom-interval
-    # strategy: "standard-exponential"
-    # initial-interval: 500ms
-    # exponential-backoff-multiplier: 2.0
-
-    #final long interval = of(initialIntervalMillis, x -> (long) (x * multiplier))
-    #.apply(attempt);
-    #return (long) randomize(interval, randomizationFactor);
     strategy: "random-backoff"
-    initial-interval: 200ms
+    initial-interval: 200  # in milliseconds
     exponential-backoff-multiplier: 1.5
     randomization-factor: 0.5
-    maxInterval: 5000ms
+    maxInterval: 10000  # in milliseconds (10 seconds)
 
+    # Alternative configurations:
+    # For standard-exponential strategy:
+    # strategy: "standard-exponential"
+    # initial-interval: 500
+    # exponential-backoff-multiplier: 2.0
+
+    # For custom-interval strategy:
     # strategy: "custom-interval"
 
     retry-exceptions:
@@ -72,7 +71,3 @@ app:
       - feign.FeignException.InternalServerError
       - feign.FeignException.BadGateway
       - feign.FeignException.GatewayTimeout
-
-
-    # Custom application properties
-

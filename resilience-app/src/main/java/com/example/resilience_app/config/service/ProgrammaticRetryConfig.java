@@ -27,11 +27,28 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 public class ProgrammaticRetryConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(ProgrammaticRetryConfig.class);
+    private final static String clientName = "programmaticRetry";
 
     @Value("${app.troubleMaker.url}")
     private String troubleMakerURL;
 
-    private final static String clientName = "programmaticRetryClient";
+    @Value("${app.programmaticRetryConfig.max-attempts}")
+    private int maxAttempts;
+
+    @Value("${app.programmaticRetryConfig.strategy}")
+    private String strategy;
+
+    @Value("${app.programmaticRetryConfig.initial-interval}")
+    private long initialInterval;
+
+    @Value("${app.programmaticRetryConfig.exponential-backoff-multiplier}")
+    private double multiplier;
+
+    @Value("${app.programmaticRetryConfig.randomization-factor}")
+    private double randomizationFactor;
+
+    @Value("${app.programmaticRetryConfig.maxInterval}")
+    private long maxInterval;
 
     private final RetryRegistry retryRegistry;
 
@@ -42,14 +59,34 @@ public class ProgrammaticRetryConfig {
     @Bean
     public Retry programmaticRetry() {
         logger.info("🔧 [PROGRAMMATIC-RETRY] Creating retry instance: {}", clientName);
+        logger.info("🔧 [PROGRAMMATIC-RETRY] Strategy: {}, Max Attempts: {}, Initial Interval: {}ms, Multiplier: {}, Randomization Factor: {}, Max Interval: {}ms",
+                strategy, maxAttempts, initialInterval, multiplier, randomizationFactor, maxInterval);
 
-        RetryConfig retryConfig = RetryConfigUtil.createRandomBackoffRetry(
-                5, // max attempts
-                1000, // initial interval in milliseconds
-                1.5, // multiplier
-                0.5, // randomization factor
-                10 // max interval in seconds
-        );
+        RetryConfig retryConfig = switch (strategy.toLowerCase()) {
+            case "random-backoff" -> RetryConfigUtil.createRandomBackoffRetry(
+                    maxAttempts,
+                    initialInterval,
+                    multiplier,
+                    randomizationFactor,
+                    maxInterval / 1000 // Convert to seconds for maxInterval
+            );
+            case "standard-exponential" -> RetryConfigUtil.createStandardRetry(
+                    maxAttempts,
+                    initialInterval / 1000, // Convert to seconds
+                    multiplier,
+                    null
+            );
+            default -> {
+                logger.warn("Unknown strategy '{}', falling back to random-backoff", strategy);
+                yield RetryConfigUtil.createRandomBackoffRetry(
+                        maxAttempts,
+                        initialInterval,
+                        multiplier,
+                        randomizationFactor,
+                        maxInterval / 1000
+                );
+            }
+        };
 
         // Create a retry instance and register it with RetryRegistry
         Retry retry = retryRegistry.retry(clientName, retryConfig);
@@ -66,7 +103,6 @@ public class ProgrammaticRetryConfig {
         return new SpringMvcContract();
     }
 
-
     @Bean
     SpringEncoder feignEncoder() {
         var jsonMessageConverters = new MappingJackson2HttpMessageConverter(new ObjectMapper());
@@ -79,7 +115,7 @@ public class ProgrammaticRetryConfig {
         return new ResponseEntityDecoder(new SpringDecoder(() -> new HttpMessageConverters(jsonMessageConverters)));
     }
 
-    @Bean("programmaticRetryClientBean")  // Give it a specific name
+    @Bean("programmaticRetryClientBean")
     public ProgrammaticRetryClient programmaticRetryClient(Retry programmaticRetry, SpringMvcContract springContract) {
         FeignDecorators decorators = FeignDecorators.builder()
                 .withRetry(programmaticRetry)
@@ -89,7 +125,32 @@ public class ProgrammaticRetryConfig {
                 .addCapability(Resilience4jFeign.capability(decorators))
                 .encoder(feignEncoder())
                 .decoder(feignDecoder())
-                .contract(springContract)  // Use SpringMvcContract for @GetMapping support
+                .contract(springContract)
                 .target(ProgrammaticRetryClient.class, troubleMakerURL);
+    }
+
+    // Getter methods for use in other components
+    public int getMaxAttempts() {
+        return maxAttempts;
+    }
+
+    public String getStrategy() {
+        return strategy;
+    }
+
+    public long getInitialInterval() {
+        return initialInterval;
+    }
+
+    public double getMultiplier() {
+        return multiplier;
+    }
+
+    public double getRandomizationFactor() {
+        return randomizationFactor;
+    }
+
+    public long getMaxInterval() {
+        return maxInterval;
     }
 }
