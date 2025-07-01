@@ -64,46 +64,6 @@ public class ResilienceAppController {
     }
 
     /**
-     * Test @QUALIFIER retry configuration
-     * Uses @Qualifier annotation with YAML configuration
-     */
-    @PostMapping("/qualifier/retry")
-    public ResponseEntity<Map<String, Object>> testQualifierRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
-        if (errorRequest == null) {
-            errorRequest = createDefaultErrorRequest();
-        }
-
-        logger.info("=== Testing @QUALIFIER Retry Strategy ===");
-        logger.info("Configuration: @Qualifier + YAML Config");
-        logger.info("Error request: {}", errorRequest);
-
-        try {
-            String result = troubleMakerAdapter.simulateErrorWithQualifierRetry(errorRequest);
-            logger.info("Qualifier retry call successful: {}", result);
-
-            return ResponseEntity.ok(Map.of(
-                    "status", "SUCCESS",
-                    "strategy", "@QUALIFIER - YAML Configuration",
-                    "configuration", "3 attempts, exponential backoff (1s with 2x multiplier)",
-                    "result", result,
-                    "timestamp", LocalDateTime.now()
-            ));
-
-        } catch (Exception e) {
-            logger.error("Qualifier retry call failed after all retries: {}", e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of(
-                            "status", "FAILED",
-                            "strategy", "@QUALIFIER - YAML Configuration",
-                            "configuration", "3 attempts, exponential backoff (1s with 2x multiplier)",
-                            "error", e.getMessage(),
-                            "timestamp", LocalDateTime.now()
-                    ));
-        }
-    }
-
-    /**
      * Test @RETRY ANNOTATION configuration
      * Uses @Retry annotation with YAML configuration
      */

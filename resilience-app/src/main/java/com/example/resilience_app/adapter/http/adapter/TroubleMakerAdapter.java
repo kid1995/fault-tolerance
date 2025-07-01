@@ -1,7 +1,6 @@
 package com.example.resilience_app.adapter.http.adapter;
 
 import com.example.resilience_app.adapter.http.client.ProgrammaticRetryClient;
-import com.example.resilience_app.adapter.http.client.QualifierRetryClient;
 import com.example.resilience_app.adapter.http.client.AnnotationRetryService;
 import com.example.resilience_app.model.ErrorTestRequest;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -15,15 +14,12 @@ public class TroubleMakerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(TroubleMakerAdapter.class);
 
     private final ProgrammaticRetryClient programmaticRetryClient;
-    private final QualifierRetryClient qualifierRetryClient;
     private final AnnotationRetryService annotationRetryService;
 
     public TroubleMakerAdapter(
             ProgrammaticRetryClient programmaticRetryClient,
-            QualifierRetryClient qualifierRetryClient,
             AnnotationRetryService annotationRetryService) {
         this.programmaticRetryClient = programmaticRetryClient;
-        this.qualifierRetryClient = qualifierRetryClient;
         this.annotationRetryService = annotationRetryService;
     }
 
@@ -46,31 +42,6 @@ public class TroubleMakerAdapter {
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
             logger.error("❌ [PROGRAMMATIC-RETRY] Call FAILED after {}ms: {} - {}",
-                    duration, e.getClass().getSimpleName(), e.getMessage());
-            throw e;
-        }
-    }
-
-    /**
-     * Call service with @QUALIFIER retry configuration
-     * Uses @Qualifier annotation with YAML configuration
-     */
-    public String simulateErrorWithQualifierRetry(ErrorTestRequest errorRequest) {
-        logger.info("🏷️ [QUALIFIER-RETRY] Starting call with @QUALIFIER + YAML configuration");
-        logger.info("⚙️ [QUALIFIER-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
-                errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
-
-        long startTime = System.currentTimeMillis();
-        try {
-            String result = qualifierRetryClient.simulateError(errorRequest.getErrorCode(), errorRequest);
-            long duration = System.currentTimeMillis() - startTime;
-
-            logger.info("✅ [QUALIFIER-RETRY] Call SUCCESSFUL after {}ms: {}", duration, result);
-            return result;
-
-        } catch (Exception e) {
-            long duration = System.currentTimeMillis() - startTime;
-            logger.error("❌ [QUALIFIER-RETRY] Call FAILED after {}ms: {} - {}",
                     duration, e.getClass().getSimpleName(), e.getMessage());
             throw e;
         }

@@ -12,7 +12,7 @@ resilience4j:
   retry:
     configs:
       default:
-        max-attempts: 3
+        max-attempts: 15
         wait-duration: 1s
         enable-exponential-backoff: true
         exponential-backoff-multiplier: 2
@@ -22,18 +22,6 @@ resilience4j:
           - feign.RetryableException
           - feign.FeignException
     instances:
-      # Used by @Qualifier approach in QualifierRetryClient
-      qualifierRetryConfig:
-        base-config: default
-        max-attempts: 15
-        wait-duration: 5s
-        enable-exponential-backoff: true
-        exponential-backoff-multiplier: 2
-        retry-exceptions:
-          - java.net.ConnectException
-          - java.net.SocketTimeoutException
-          - feign.RetryableException
-          - feign.FeignException
       # Used by @Retry annotation approach in TroubleMakerAdapter
       annotationRetryConfig:
         max-attempts: 5
