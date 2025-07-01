@@ -25,8 +25,8 @@ resilience4j:
       # Used by @Qualifier approach in QualifierRetryClient
       qualifierRetryConfig:
         base-config: default
-        max-attempts: 3
-        wait-duration: 1s
+        max-attempts: 15
+        wait-duration: 5s
         enable-exponential-backoff: true
         exponential-backoff-multiplier: 2
         retry-exceptions:

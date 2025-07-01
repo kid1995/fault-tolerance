@@ -1,23 +1,17 @@
-package com.example.resilience_app.component;
+package com.example.resilience_app.utils;
 
 import io.github.resilience4j.retry.event.RetryEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-/**
- * Simple retry event listener that logs all retry events
- * for monitoring and debugging purposes.
- */
-@Component
-public class RetryEventListener {
+public final class RetryEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(RetryEventListener.class);
 
     /**
      * Handle retry events and log them with detailed information
      */
-    public void onRetryEvent(RetryEvent retryEvent) {
+    public static void onRetryEvent(RetryEvent retryEvent) {
         switch (retryEvent.getEventType()) {
             case RETRY:
                 handleRetryAttempt(retryEvent);
@@ -40,7 +34,7 @@ public class RetryEventListener {
         }
     }
 
-    private void handleRetryAttempt(RetryEvent retryEvent) {
+    private static void handleRetryAttempt(RetryEvent retryEvent) {
         logger.warn("🔄 [RETRY-ATTEMPT] Name: {} | Attempt: {} | Exception: {} | Message: {}",
                 retryEvent.getName(),
                 retryEvent.getNumberOfRetryAttempts(),
@@ -48,7 +42,7 @@ public class RetryEventListener {
                 retryEvent.getLastThrowable().getMessage());
     }
 
-    private void handleSuccess(RetryEvent retryEvent) {
+    private static void handleSuccess(RetryEvent retryEvent) {
         if (retryEvent.getNumberOfRetryAttempts() == 0) {
             logger.info("✅ [FIRST-ATTEMPT-SUCCESS] Name: {} | Succeeded on first attempt",
                     retryEvent.getName());
@@ -59,7 +53,7 @@ public class RetryEventListener {
         }
     }
 
-    private void handleRetryError(RetryEvent retryEvent) {
+    private static void handleRetryError(RetryEvent retryEvent) {
         logger.error("❌ [RETRY-EXHAUSTED] Name: {} | All {} attempts failed | Final Exception: {} | Message: {}",
                 retryEvent.getName(),
                 retryEvent.getNumberOfRetryAttempts(),
@@ -67,7 +61,7 @@ public class RetryEventListener {
                 retryEvent.getLastThrowable().getMessage());
     }
 
-    private void handleIgnoredError(RetryEvent retryEvent) {
+    private static void handleIgnoredError(RetryEvent retryEvent) {
         logger.debug("⚠️ [RETRY-IGNORED] Name: {} | Exception ignored (not retryable): {} | Message: {}",
                 retryEvent.getName(),
                 retryEvent.getLastThrowable().getClass().getSimpleName(),

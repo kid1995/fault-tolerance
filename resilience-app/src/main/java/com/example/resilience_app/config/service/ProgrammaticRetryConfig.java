@@ -2,6 +2,7 @@ package com.example.resilience_app.config.service;
 
 import com.example.resilience_app.adapter.http.client.ProgrammaticRetryClient;
 import com.example.resilience_app.utils.RetryConfigUtil;
+import com.example.resilience_app.utils.RetryEventListener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
 import feign.codec.Decoder;
@@ -44,12 +45,10 @@ public class ProgrammaticRetryConfig {
 
         RetryConfig retryConfig = RetryConfigUtil.createRandomBackoffRetry();
 
-        // Create retry instance and register it with RetryRegistry
+        // Create a retry instance and register it with RetryRegistry
         Retry retry = retryRegistry.retry(clientName, retryConfig);
-        retry.getEventPublisher().onRetry(event -> {logger.info( "event: {}", event);});
-        retryRegistry.addConfiguration(clientName, retryConfig);
+        retry.getEventPublisher().onEvent(RetryEventListener::onRetryEvent);
         logger.info("✅ [PROGRAMMATIC-RETRY] Retry instance '{}' registered with RetryRegistry", clientName);
-
         return retry;
     }
 
