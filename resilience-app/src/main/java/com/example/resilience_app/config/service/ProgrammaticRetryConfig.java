@@ -9,6 +9,9 @@ import io.github.resilience4j.feign.FeignDecorators;
 import io.github.resilience4j.feign.Resilience4jFeign;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.RetryRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.cloud.openfeign.support.ResponseEntityDecoder;
@@ -22,15 +25,31 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 @Configuration
 public class ProgrammaticRetryConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProgrammaticRetryConfig.class);
+
     @Value("${app.troubleMaker.url}")
     private String troubleMakerURL;
 
     private final static String clientName = "programmaticRetryClient";
 
+    private final RetryRegistry retryRegistry;
+
+    public ProgrammaticRetryConfig(RetryRegistry retryRegistry) {
+        this.retryRegistry = retryRegistry;
+    }
+
     @Bean
     public Retry programmaticRetry() {
+        logger.info("🔧 [PROGRAMMATIC-RETRY] Creating retry instance: {}", clientName);
+
         RetryConfig retryConfig = RetryConfigUtil.createRandomBackoffRetry();
-        return Retry.of(clientName, retryConfig);
+
+        // Create retry instance and register it with RetryRegistry
+        Retry retry = retryRegistry.retry(clientName, retryConfig);
+
+        logger.info("✅ [PROGRAMMATIC-RETRY] Retry instance '{}' registered with RetryRegistry", clientName);
+
+        return retry;
     }
 
     /**
