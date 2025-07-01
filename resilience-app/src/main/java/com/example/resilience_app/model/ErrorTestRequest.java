@@ -5,16 +5,17 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorTestRequest {
 
-    private String errorCode = "503"; // Default to 503 Service Unavailable
-    private double errorRate = 1.0; // 100% error rate by default
-    private int responseDelayMs = 0;
-    private int retryAfterSeconds = 30;
-    private long timeoutDelayMs = 5000;
-    private boolean enabled = true;
+    private String errorCode;
+    private double errorRate;
+    private int responseDelayMs;
+    private int retryAfterSeconds;
+    private long timeoutDelayMs;
+    private boolean enabled;
     private String description;
 
     // Default constructor
-    public ErrorTestRequest() {}
+    public ErrorTestRequest() {
+    }
 
     // Constructor
     public ErrorTestRequest(String errorCode, double errorRate, int responseDelayMs,

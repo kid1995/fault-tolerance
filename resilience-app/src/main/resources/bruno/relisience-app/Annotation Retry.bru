@@ -1,7 +1,7 @@
 meta {
-  name: Test Programmatic Retry - High Error Rate
+  name: Annotation Retry
   type: http
-  seq: 1
+  seq: 3
 }
 
 post {
@@ -17,7 +17,7 @@ headers {
 body:json {
   {
     "errorCode": "503",
-    "errorRate": 0.9,
+    "errorRate": 1.0,
     "responseDelayMs": 500,
     "retryAfterSeconds": 5,
     "timeoutDelayMs": 5000,

@@ -19,18 +19,12 @@ public final class RetryConfigUtil {
                 .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(1), 2.0))
                 .retryExceptions(
                         java.net.ConnectException.class,           // Connection refused
-                        java.net.SocketTimeoutException.class,     // Socket timeout
-                        java.net.SocketException.class,            // General socket errors
                         java.net.UnknownHostException.class,       // DNS resolution failures
                         java.io.IOException.class,                 // General I/O errors
 
                         // Feign specific exceptions
                         feign.RetryableException.class,            // Feign retryable errors
-                        feign.FeignException.class,                // All Feign exceptions
-
-                        // Database exceptions (since this is database-friendly)
-                        java.sql.SQLException.class,
-                        java.sql.SQLTransientException.class
+                        feign.FeignException.class              // All Feign exceptions
                 )
                 .build();
     }
@@ -46,18 +40,12 @@ public final class RetryConfigUtil {
                 ))
                 .retryExceptions(
                         java.net.ConnectException.class,           // Connection refused
-                        java.net.SocketTimeoutException.class,     // Socket timeout
-                        java.net.SocketException.class,            // General socket errors
                         java.net.UnknownHostException.class,       // DNS resolution failures
                         java.io.IOException.class,                 // General I/O errors
 
                         // Feign specific exceptions
                         feign.RetryableException.class,            // Feign retryable errors
-                        feign.FeignException.class,                // All Feign exceptions
-
-                        // Database exceptions (since this is database-friendly)
-                        java.sql.SQLException.class,
-                        java.sql.SQLTransientException.class
+                        feign.FeignException.class                // All Feign exceptions
                 )
                 .build();
     }
@@ -68,18 +56,12 @@ public final class RetryConfigUtil {
                 .intervalFunction(createCustomLinearInterval())
                 .retryExceptions(
                         java.net.ConnectException.class,           // Connection refused
-                        java.net.SocketTimeoutException.class,     // Socket timeout
-                        java.net.SocketException.class,            // General socket errors
                         java.net.UnknownHostException.class,       // DNS resolution failures
                         java.io.IOException.class,                 // General I/O errors
 
                         // Feign specific exceptions
                         feign.RetryableException.class,            // Feign retryable errors
-                        feign.FeignException.class,                // All Feign exceptions
-
-                        // Database exceptions (since this is database-friendly)
-                        java.sql.SQLException.class,
-                        java.sql.SQLTransientException.class
+                        feign.FeignException.class                // All Feign exceptions
                 )
                 .build();
     }

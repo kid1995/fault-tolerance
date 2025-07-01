@@ -22,7 +22,6 @@ public class TroubleMakerAdapter {
         this.programmaticRetryClient = programmaticRetryClient;
         this.annotationRetryService = annotationRetryService;
     }
-
     /**
      * Call service with PROGRAMMATIC retry configuration
      * Uses Feign builder with custom RetryConfig (Database-friendly strategy)
@@ -58,18 +57,10 @@ public class TroubleMakerAdapter {
                 errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
 
         long startTime = System.currentTimeMillis();
-        try {
-            String result = annotationRetryService.simulateError(errorRequest.getErrorCode(), errorRequest);
-            long duration = System.currentTimeMillis() - startTime;
+        String result = annotationRetryService.simulateError(errorRequest.getErrorCode(), errorRequest);
+        long duration = System.currentTimeMillis() - startTime;
 
-            logger.info("✅ [ANNOTATION-RETRY] Call SUCCESSFUL after {}ms: {}", duration, result);
-            return result;
-
-        } catch (Exception e) {
-            long duration = System.currentTimeMillis() - startTime;
-            logger.error("🔔 [ANNOTATION-RETRY] Retry attempt FAILED after {}ms: {} - {}",
-                    duration, e.getClass().getSimpleName(), e.getMessage());
-            throw e;
-        }
+        logger.info("✅ [ANNOTATION-RETRY] Call SUCCESSFUL after {}ms: {}", duration, result);
+        return result;
     }
 }

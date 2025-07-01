@@ -23,9 +23,12 @@ ext {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+	// AOP support for @Retry annotations - CRUCIAL!
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
 
 	implementation "io.github.resilience4j:resilience4j-spring-boot3:${resilience4jVersion}"
 	implementation "io.github.resilience4j:resilience4j-feign:${resilience4jVersion}"
