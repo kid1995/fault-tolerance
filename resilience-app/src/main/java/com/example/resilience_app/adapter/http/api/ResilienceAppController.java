@@ -43,7 +43,7 @@ public class ResilienceAppController {
 
             return ResponseEntity.ok(Map.of(
                     "status", "SUCCESS",
-                    "strategy", "PROGRAMMATIC - Feign Builder + Database-friendly RetryConfig",
+                    "strategy", "PROGRAMMATIC - Feign Builder",
                     "configuration", "4 attempts, exponential random backoff (200ms-10s)",
                     "result", result,
                     "timestamp", LocalDateTime.now()
@@ -55,7 +55,7 @@ public class ResilienceAppController {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(Map.of(
                             "status", "FAILED",
-                            "strategy", "PROGRAMMATIC - Feign Builder + Database-friendly RetryConfig",
+                            "strategy", "PROGRAMMATIC - Feign Builder",
                             "configuration", "4 attempts, exponential random backoff (200ms-10s)",
                             "error", e.getMessage(),
                             "timestamp", LocalDateTime.now()
@@ -143,70 +143,6 @@ public class ResilienceAppController {
         }
     }
 
-    /**
-     * Test all retry strategies in sequence
-     */
-    @PostMapping("/all/retry")
-    public ResponseEntity<Map<String, Object>> testAllRetryStrategies(@RequestBody(required = false) ErrorTestRequest errorRequest) {
-        if (errorRequest == null) {
-            errorRequest = createDefaultErrorRequest();
-        }
-
-        logger.info("=== Testing ALL Retry Strategies ===");
-        logger.info("Error request: {}", errorRequest);
-
-        Map<String, Object> results = Map.of(
-                "programmaticRetry", testProgrammaticRetry(errorRequest).getBody(),
-                "qualifierRetry", testQualifierRetry(errorRequest).getBody(),
-                "annotationRetry", testAnnotationRetry(errorRequest).getBody(),
-                "timestamp", LocalDateTime.now()
-        );
-
-        return ResponseEntity.ok(results);
-    }
-
-    /**
-     * Get current retry configurations info
-     */
-    @GetMapping("/info")
-    public ResponseEntity<Map<String, Object>> getRetryInfo() {
-        logger.info("=== Retry Configuration Info ===");
-
-        Map<String, Object> info = Map.of(
-                "strategies", Map.of(
-                        "programmatic", Map.of(
-                                "approach", "Feign Builder + Custom RetryConfig",
-                                "class", "ProgrammaticRetryConfig",
-                                "client", "ProgrammaticRetryClient",
-                                "strategy", "Database-friendly retry",
-                                "maxAttempts", 4,
-                                "intervalFunction", "Exponential Random Backoff (200ms-10s)",
-                                "endpoint", "POST /api/test/programmatic/retry"
-                        ),
-                        "qualifier", Map.of(
-                                "approach", "@Qualifier + YAML Configuration",
-                                "client", "QualifierRetryClient",
-                                "yamlKey", "qualifierRetryConfig",
-                                "maxAttempts", 3,
-                                "waitDuration", "1s with exponential backoff (2x multiplier)",
-                                "endpoint", "POST /api/test/qualifier/retry"
-                        ),
-                        "annotation", Map.of(
-                                "approach", "@Retry Annotation + YAML Configuration",
-                                "client", "AnnotationRetryService",
-                                "method", "@Retry(name = \"annotationRetryConfig\")",
-                                "yamlKey", "annotationRetryConfig",
-                                "maxAttempts", 5,
-                                "waitDuration", "500ms with exponential backoff (1.5x multiplier)",
-                                "endpoint", "POST /api/test/annotation/retry"
-                        )
-                ),
-                "allStrategies", "POST /api/test/all/retry",
-                "timestamp", LocalDateTime.now()
-        );
-
-        return ResponseEntity.ok(info);
-    }
 
     /**
      * Create default error request for testing
