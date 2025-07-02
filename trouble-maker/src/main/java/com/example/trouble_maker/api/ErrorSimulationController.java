@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 @RestController
 @RequestMapping("/api/errors")
@@ -24,10 +23,6 @@ public class ErrorSimulationController {
         this.errorConfigService = errorConfigService;
     }
 
-    /**
-     * 503 Service Unavailable
-     * Simulates temporary overload or scheduled maintenance
-     */
     @PostMapping
     public ResponseEntity<Map<String, Object>> serviceUnavailable(
             @RequestParam Map<String, String> requestParams,

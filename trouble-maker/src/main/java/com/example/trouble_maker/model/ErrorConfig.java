@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorConfig {
-    
-    private double errorRate = 1.0; // Default to 100% error rate
-    private int responseDelayMs = 0; // No delay by default
-    private int retryAfterSeconds = 30; // Retry-After header value for 429 and 503
-    private long timeoutDelayMs = 5000; // Timeout delay for 504 and 408
-    private boolean enabled = true;
+
+    private double errorRate; // Error rate (0.0 - 1.0). 0.0 = no errors, 1.0 = always an error.
+    private int responseDelayMs; // Simulated server response delay (ms).
+    private int retryAfterSeconds; // Simulated "Retry-After" header value (seconds).
+    private long timeoutDelayMs; // Timeout delay for 504/408 errors (ms).
+    private boolean enabled; // Enables/disables error simulation.
 
     // Default constructor
     public ErrorConfig() {}
@@ -30,7 +30,7 @@ public class ErrorConfig {
     }
 
     public void setErrorRate(double errorRate) {
-        this.errorRate = Math.max(0.0, Math.min(1.0, errorRate)); // Clamp between 0 and 1
+        this.errorRate = Math.clamp(errorRate, 0.0, 1.0);
     }
 
     public int getResponseDelayMs() {

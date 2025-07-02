@@ -150,7 +150,7 @@ public class ResilienceAppController {
     }
 
     /**
-     * Format the result to be more readable in Bruno/API responses
+     * Format the result to be more readable in Bruno GUI
      */
     private Object formatResult(String result) {
         if (result == null || result.trim().isEmpty()) {
@@ -174,7 +174,7 @@ public class ResilienceAppController {
     }
 
     /**
-     * Create default error request for testing
+     * This default was used before for fast test can be removed when the simulation stable
      */
     private ErrorTestRequest createDefaultErrorRequest() {
         ErrorTestRequest defaultRequest = new ErrorTestRequest();

@@ -7,6 +7,7 @@ import com.example.resilience_app.utils.RetryConfigUtil;
 import com.example.resilience_app.utils.RetryEventListener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
+import feign.Request;
 import feign.codec.Decoder;
 import io.github.resilience4j.feign.FeignDecorators;
 import io.github.resilience4j.feign.Resilience4jFeign;
@@ -26,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class ProgrammaticRetryConfig {
@@ -126,11 +128,21 @@ public class ProgrammaticRetryConfig {
                 .withFallbackFactory(ProgrammaticRetryFallBack::new)
                 .build();
 
+        int connectTimeoutMillis = 20_000; // 20 Sekunden Verbindungstimeout
+        int readTimeoutMillis = 20_000; // 20 Sekunden Lesetimeout
+
+        Request.Options options = new Request.Options(
+                connectTimeoutMillis,
+                TimeUnit.MILLISECONDS,
+                readTimeoutMillis,
+                TimeUnit.MILLISECONDS, true);
+
         return Feign.builder()
                 .addCapability(Resilience4jFeign.capability(decorators))
                 .encoder(feignEncoder())
                 .decoder(feignDecoder())
                 .contract(springContract)
+                .options(options)
                 .target(ProgrammaticRetryClient.class, troubleMakerURL);
     }
 

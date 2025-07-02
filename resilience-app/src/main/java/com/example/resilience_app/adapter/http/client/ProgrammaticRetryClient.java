@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Feign client for programmatic retry testing.
- * This client is used to simulate errors and test the retry mechanism.
+ * This client is build in ProgrammaticRetryConfig
  */
 public interface ProgrammaticRetryClient {
     @PostMapping("/api/errors")

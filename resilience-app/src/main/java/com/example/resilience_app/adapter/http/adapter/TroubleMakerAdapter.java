@@ -49,10 +49,7 @@ public class TroubleMakerAdapter {
     }
 
     /**
-     * CRITICAL: The error message shows Resilience4j expects THIS exact signature:
-     * simulateErrorWithAnnotationRetryFallback(ErrorTestRequest, Throwable)
-     *
-     * NOT: simulateErrorWithAnnotationRetryFallback(Throwable, ErrorTestRequest)
+     * simulateErrorWithAnnotationRetryFallback is not detected by IDE, however it will be executed by annotationRetryConfig when all attempts bring no success
      */
     public String simulateErrorWithAnnotationRetryFallback(ErrorTestRequest errorRequest, Throwable throwable) {
         logger.warn("🔙 [ANNOTATION-RETRY-FALLBACK] All retries exhausted, executing fallback");
