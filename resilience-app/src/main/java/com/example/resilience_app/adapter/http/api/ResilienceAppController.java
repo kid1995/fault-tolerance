@@ -1,6 +1,7 @@
 package com.example.resilience_app.adapter.http.api;
 
 import com.example.resilience_app.adapter.http.adapter.TroubleMakerAdapter;
+import com.example.resilience_app.adapter.message.MessageProducer;
 import com.example.resilience_app.config.service.ProgrammaticRetryConfig;
 import com.example.resilience_app.model.ErrorTestRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -8,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +25,7 @@ public class ResilienceAppController {
     private final TroubleMakerAdapter troubleMakerAdapter;
     private final ProgrammaticRetryConfig programmaticRetryConfig;
     private final ObjectMapper objectMapper;
+    private final MessageProducer messageProducer;
 
     @Value("${resilience4j.retry.instances.annotationRetryConfig.max-attempts}")
     private int annotationMaxAttempts;
@@ -35,12 +36,16 @@ public class ResilienceAppController {
     @Value("${resilience4j.retry.instances.annotationRetryConfig.exponential-backoff-multiplier}")
     private double annotationMultiplier;
 
+    @Value("${spring.stream.bindings.resilience-lab-in-0.destination}")
+    private String RESILIENCE_LAB_BINDING;
+
     public ResilienceAppController(TroubleMakerAdapter troubleMakerAdapter,
                                    ProgrammaticRetryConfig programmaticRetryConfig,
-                                   ObjectMapper objectMapper) {
+                                   ObjectMapper objectMapper, MessageProducer messageProducer) {
         this.troubleMakerAdapter = troubleMakerAdapter;
         this.programmaticRetryConfig = programmaticRetryConfig;
         this.objectMapper = objectMapper;
+        this.messageProducer = messageProducer;
     }
 
     /**
@@ -49,22 +54,10 @@ public class ResilienceAppController {
      */
     @PostMapping("/programmatic/retry")
     public ResponseEntity<Map<String, Object>> testProgrammaticRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
-        if (errorRequest == null) {
-            errorRequest = createDefaultErrorRequest();
-        }
-
-        logger.info("=== Testing PROGRAMMATIC Retry Strategy ===");
-        logger.info("Configuration: Feign Builder + Custom RetryConfig");
-        logger.info("Error request: {}", errorRequest);
-
+        ErrorTestRequest verifiedErrorTestRequest = checkandLogErrorTestRequest(errorRequest, "PROGRAMMATIC", "Feign Builder + Custom RetryConfig");
         String strategyDescription = buildProgrammaticStrategyDescription();
         String configurationDescription = buildProgrammaticConfigurationDescription();
-
-
-        logger.info("👨‍💻 [PROGRAMMATIC-RETRY] Starting call with FEIGN BUILDER + RetryConfig");
-        logger.info("⚙️ [PROGRAMMATIC-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
-                errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
-        String result = troubleMakerAdapter.simulateErrorWithProgrammaticRetry(errorRequest);
+        String result = troubleMakerAdapter.simulateErrorWithProgrammaticRetry(verifiedErrorTestRequest);
         logger.info("Programmatic retry call successful: {}", result);
 
         return ResponseEntity.ok(Map.of(
@@ -74,8 +67,37 @@ public class ResilienceAppController {
                 "result", formatResult(result),
                 "timestamp", LocalDateTime.now()
         ));
-
     }
+
+    /**
+     * Test PROGRAMMATIC retry configuration
+     * Uses Feign builder with custom RetryConfig (Database-friendly strategy)
+     */
+    @PostMapping("/programmatic/async/retry")
+    public ResponseEntity<Map<String, Object>> testProgrammaticRetryAsync(
+            @RequestParam (value = "numOfMsg", required = false, defaultValue = "1") String numOfMsg,
+            @RequestBody(required = false) ErrorTestRequest errorRequest) {
+        ErrorTestRequest verifiedErrorTestRequest = checkandLogErrorTestRequest(errorRequest,
+                "PROGRAMMATIC-ASYNC",
+                "Kafka + Feign Builder + Custom RetryConfig");
+
+        String strategyDescription = buildProgrammaticStrategyDescription();
+        String configurationDescription = buildProgrammaticConfigurationDescription();
+        messageProducer.sendMessage(
+                RESILIENCE_LAB_BINDING,
+                verifiedErrorTestRequest);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "strategy", strategyDescription,
+                "configuration", configurationDescription,
+                "result", "Message sent to programmatic retry binding",
+                "timestamp", LocalDateTime.now()
+        ));
+    }
+
+
+
 
     /**
      * Test @RETRY ANNOTATION configuration
@@ -83,22 +105,11 @@ public class ResilienceAppController {
      */
     @PostMapping("/annotation/retry")
     public ResponseEntity<Map<String, Object>> testAnnotationRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
-        if (errorRequest == null) {
-            errorRequest = createDefaultErrorRequest();
-        }
-
-        logger.info("=== Testing @RETRY ANNOTATION Strategy ===");
-        logger.info("Configuration: @Retry Annotation + YAML Config");
-        logger.info("Error request: {}", errorRequest);
-
+        ErrorTestRequest verifiedErrorTestRequest = checkandLogErrorTestRequest(errorRequest, "ANNOTATION", "@RETRY ANNOTATION + YAML Config");
         String strategyDescription = "@RETRY ANNOTATION - YAML Configuration";
         String configurationDescription = buildAnnotationConfigurationDescription();
 
-
-        logger.info("＠ [ANNOTATION-RETRY] Starting call with @RETRY ANNOTATION + YAML configuration");
-        logger.info("⚙️ [ANNOTATION-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
-                errorRequest.getErrorCode(), errorRequest.getErrorRate(), errorRequest.getResponseDelayMs());
-        String result = troubleMakerAdapter.simulateErrorWithAnnotationRetry(errorRequest);
+        String result = troubleMakerAdapter.simulateErrorWithAnnotationRetry(verifiedErrorTestRequest);
         logger.info("Annotation retry call successful: {}", result);
 
         return ResponseEntity.ok(Map.of(
@@ -110,6 +121,38 @@ public class ResilienceAppController {
         ));
 
 
+    }
+
+    private ErrorTestRequest checkandLogErrorTestRequest(ErrorTestRequest errorTestRequest, String strategy, String configuration) {
+        ErrorTestRequest verifiedErrorTestRequest = errorTestRequest == null ? createDefaultErrorRequest() : errorTestRequest;
+
+        logger.info("=== Testing {} Retry Strategy ===", strategy);
+        switch (strategy) {
+            case "PROGRAMMATIC":
+                logger.info("Configuration: Feign Builder + Custom RetryConfig");
+                break;
+            case "ANNOTATION":
+                logger.info("Configuration: @Retry Annotation + YAML Config");
+                break;
+            default:
+                logger.warn("Unknown strategy '{}' configuration", strategy);
+        }
+
+        logger.info("Error request: {}", verifiedErrorTestRequest);
+
+        switch (strategy) {
+            case "PROGRAMMATIC":
+                logger.info("👨‍💻 [{}-RETRY] Starting call with FEIGN BUILDER + RetryConfig", strategy);
+                break;
+            case "ANNOTATION":
+                logger.info("＠ [{}-RETRY] Starting call with @RETRY ANNOTATION + YAML configuration", strategy);
+                break;
+            default:
+                logger.warn("Unknown Starting strategy '{}'", strategy);
+        }
+        logger.info("⚙️ [{}-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
+                verifiedErrorTestRequest.getErrorCode(), verifiedErrorTestRequest.getErrorRate(), verifiedErrorTestRequest.getResponseDelayMs(), strategy);
+        return verifiedErrorTestRequest;
     }
 
     /**

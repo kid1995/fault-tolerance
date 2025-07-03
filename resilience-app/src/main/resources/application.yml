@@ -6,8 +6,34 @@ spring:
     banner-mode: off
   application:
     name: resilience-app
-
-
+  stream:
+    function:
+      definition: onErrorTestRequest
+    default:
+      group: 'resilience-lab'
+      consumer:
+        max-attempts: 1
+    bindings:
+      resilience-lab-in-0:
+        destination: resilience-lab-topic
+      resilience-lab-out-0:
+        destination: resilience-lab-topic
+    kafka:
+      binder:
+        brokers: ${KAFKA_BROKERS:localhost:9092}
+        enableObservation: true
+        configuration:
+          sasl:
+            jaas:
+              enabled: ${KAFKA_JAAS_ENABLED:false}
+              config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_USER}" password="${KAFKA_PASSWORD}";
+            mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
+          security:
+            user: ${KAFKA_USER}
+            password: ${KAFKA_PASSWORD}
+            protocol: ${KAFKA_PROTOCOL:PLAINTEXT}
+        consumerProperties:
+          auto-offset-reset: latest
 # Resilience4j Configuration
 resilience4j:
   retry:
