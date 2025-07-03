@@ -6,54 +6,64 @@ spring:
     banner-mode: off
   application:
     name: resilience-app
-  stream:
-    function:
-      definition: onErrorTestRequestSequential;onErrorTestRequestConcurrent
-    default:
-      group: 'resilience-lab'
-      consumer:
-        max-attempts: 1
-    bindings:
-      # Sequential consumer binding
-      onErrorTestRequestSequential-in-0:
-        destination: ${kafka-custom-config.topics.sequential-consumer.name}
-        consumer:
-          concurrency: 1  # Single thread for sequential processing
-      # Concurrent consumer binding
-      onErrorTestRequestConcurrent-in-0:
-        destination: ${kafka-custom-config.topics.concurrent-consumer.name}
-        consumer:
-          concurrency: 3  # Multiple threads for concurrent processing
-      # Producer bindings
-      resilience-lab-sequential-out-0:
-        destination: ${kafka-custom-config.topics.sequential-consumer.name}
-      resilience-lab-concurrent-out-0:
-        destination: ${kafka-custom-config.topics.concurrent-consumer.name}
-    kafka:
-      binder:
-        brokers: localhost:9092
-        enableObservation: true
-        # Producer batch configuration
-        producer-properties:
-          batch.size: 16384  # Batch size in bytes
-          linger.ms: 10      # Wait time to accumulate messages
-          buffer.memory: 33554432
-          compression.type: snappy
-          acks: 1
-          retries: 3
-        # Consumer configuration
-        consumer-properties:
-          max.poll.records: 500        # Max records per poll
-          fetch.min.bytes: 1024        # Minimum bytes to fetch
-          fetch.max.wait.ms: 300       # Max wait time for fetch
-          auto-offset-reset: latest
-          enable-auto-commit: true
-          auto-commit-interval-ms: 1000
-        configuration:
-          security:
-            user: ${kakfa-properties.credentials.user}
-            password: ${kakfa-properties.credentials.password}
-            protocol: ${kakfa-properties.credentials.mechanism}
+  cloud:
+    stream:
+      function:
+        definition: onErrorTestRequestSequential;onErrorTestRequestConcurrent
+      bindings:
+        # Sequential consumer binding
+        onErrorTestRequestSequential-in-0:
+          destination: resilience-lab-sequential-topic
+          group: resilience-lab-sequential
+          consumer:
+            concurrency: 1
+            use-native-decoding: true
+        # Concurrent consumer binding
+        onErrorTestRequestConcurrent-in-0:
+          destination: resilience-lab-concurrent-topic
+          group: resilience-lab-concurrent
+          consumer:
+            concurrency: 3
+            use-native-decoding: true
+        # Producer bindings
+        resilience-lab-sequential-out-0:
+          destination: resilience-lab-sequential-topic
+        resilience-lab-concurrent-out-0:
+          destination: resilience-lab-concurrent-topic
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-create-topics: true
+          auto-add-partitions: true
+          min-partition-count: 3
+          replication-factor: 1
+        default:
+          consumer:
+            auto-offset-reset: earliest
+            enable-auto-commit: true
+            auto-commit-interval: 1000
+            session-timeout: 30000
+            heartbeat-interval: 3000
+          producer:
+            batch-size: 16384
+            linger: 10
+            compression-type: snappy
+            acks: 1
+            retries: 3
+        bindings:
+          # Sequential consumer configuration
+          onErrorTestRequestSequentialSimple-in-0:
+            consumer:
+              enable-dlq: false
+              auto-commit-offset: true
+              start-offset: earliest
+          # Concurrent consumer configuration
+          onErrorTestRequestConcurrentSimple-in-0:
+            consumer:
+              enable-dlq: false
+              auto-commit-offset: true
+              start-offset: earliest
+
 
 kafka-custom-config:
   topics:
