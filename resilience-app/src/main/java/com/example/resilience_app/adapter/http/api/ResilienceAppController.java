@@ -54,7 +54,7 @@ public class ResilienceAppController {
      */
     @PostMapping("/programmatic/retry")
     public ResponseEntity<Map<String, Object>> testProgrammaticRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
-        ErrorTestRequest verifiedErrorTestRequest = checkandLogErrorTestRequest(errorRequest, "PROGRAMMATIC", "Feign Builder + Custom RetryConfig");
+        ErrorTestRequest verifiedErrorTestRequest = checkAndLogErrorTestRequest(errorRequest, "PROGRAMMATIC", "Feign Builder + Custom RetryConfig");
         String strategyDescription = buildProgrammaticStrategyDescription();
         String configurationDescription = buildProgrammaticConfigurationDescription();
         String result = troubleMakerAdapter.simulateErrorWithProgrammaticRetry(verifiedErrorTestRequest);
@@ -77,7 +77,7 @@ public class ResilienceAppController {
     public ResponseEntity<Map<String, Object>> testProgrammaticRetryAsync(
             @RequestParam (value = "numOfMsg", required = false, defaultValue = "1") String numOfMsg,
             @RequestBody(required = false) ErrorTestRequest errorRequest) {
-        ErrorTestRequest verifiedErrorTestRequest = checkandLogErrorTestRequest(errorRequest,
+        ErrorTestRequest verifiedErrorTestRequest = checkAndLogErrorTestRequest(errorRequest,
                 "PROGRAMMATIC-ASYNC",
                 "Kafka + Feign Builder + Custom RetryConfig");
 
@@ -105,7 +105,7 @@ public class ResilienceAppController {
      */
     @PostMapping("/annotation/retry")
     public ResponseEntity<Map<String, Object>> testAnnotationRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
-        ErrorTestRequest verifiedErrorTestRequest = checkandLogErrorTestRequest(errorRequest, "ANNOTATION", "@RETRY ANNOTATION + YAML Config");
+        ErrorTestRequest verifiedErrorTestRequest = checkAndLogErrorTestRequest(errorRequest, "ANNOTATION", "@RETRY ANNOTATION + YAML Config");
         String strategyDescription = "@RETRY ANNOTATION - YAML Configuration";
         String configurationDescription = buildAnnotationConfigurationDescription();
 
@@ -123,7 +123,7 @@ public class ResilienceAppController {
 
     }
 
-    private ErrorTestRequest checkandLogErrorTestRequest(ErrorTestRequest errorTestRequest, String strategy, String configuration) {
+    private ErrorTestRequest checkAndLogErrorTestRequest(ErrorTestRequest errorTestRequest, String strategy, String configuration) {
         ErrorTestRequest verifiedErrorTestRequest = errorTestRequest == null ? createDefaultErrorRequest() : errorTestRequest;
 
         logger.info("=== Testing {} Retry Strategy ===", strategy);
