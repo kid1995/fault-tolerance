@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -47,14 +46,14 @@ public class MessageConsumer {
                     messageNumber, threadName, event.getDescription());
 
             try {
-                // Sequential processing - each message blocks until completion
+                // Sequential processing - each message block until completion
                 String result = troubleMakerAdapter.simulateErrorWithProgrammaticRetry(event);
 
                 long duration = System.currentTimeMillis() - startTime;
                 int successTotal = sequentialSuccessCount.incrementAndGet();
 
-                logger.info("✅ [SEQUENTIAL-{}] SUCCESS after {}ms | Thread: {} | Total success: {}",
-                        messageNumber, duration, threadName, successTotal);
+                logger.info("✅ [SEQUENTIAL-{}] SUCCESS with result {}  after {}ms | Thread: {} | Total success: {}",
+                        messageNumber, result, duration, threadName, successTotal);
 
             } catch (Exception e) {
                 long duration = System.currentTimeMillis() - startTime;
@@ -87,8 +86,8 @@ public class MessageConsumer {
                 long duration = System.currentTimeMillis() - startTime;
                 int successTotal = concurrentSuccessCount.incrementAndGet();
 
-                logger.info("✅ [CONCURRENT-{}] SUCCESS after {}ms | Thread: {} | Total success: {}",
-                        messageNumber, duration, threadName, successTotal);
+                logger.info("✅ [CONCURRENT-{}] SUCCESS with result {}  after {}ms | Thread: {} | Total success: {}",
+                        messageNumber, result, duration, threadName, successTotal);
 
             } catch (Exception e) {
                 long duration = System.currentTimeMillis() - startTime;

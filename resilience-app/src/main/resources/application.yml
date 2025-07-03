@@ -46,17 +46,6 @@ spring:
           consumerProperties:
             auto-offset-reset: latest
 
-kafka-custom-config:
-  topics:
-    sequential-consumer:
-      name: resilience-lab-sequential-topic
-    concurrent-consumer:
-      name: resilience-lab-concurrent-topic
-  credentials:
-    user: resilience_app_user
-    password: resilience_app_password
-    mechanism: PLAIN
-
 # Resilience4j Configuration
 resilience4j:
   retry:
@@ -96,22 +85,3 @@ app:
     exponential-backoff-multiplier: 1.5
     randomization-factor: 0.5
     maxInterval: 10000  # in milliseconds (10 seconds)
-    retry-exceptions:
-      - java.net.ConnectException
-      - java.net.SocketTimeoutException
-      - java.net.SocketException
-      - java.net.UnknownHostException
-      - java.io.IOException
-      - feign.RetryableException
-      - feign.FeignException
-      - feign.FeignException.ServiceUnavailable
-      - feign.FeignException.InternalServerError
-      - feign.FeignException.BadGateway
-      - feign.FeignException.GatewayTimeout
-
-# Logging configuration
-logging:
-  level:
-    com.example.resilience_app: DEBUG
-    org.apache.kafka: INFO
-    io.github.resilience4j: DEBUG
