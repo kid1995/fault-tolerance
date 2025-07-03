@@ -36,8 +36,7 @@ public class ResilienceAppController {
     @Value("${resilience4j.retry.instances.annotationRetryConfig.exponential-backoff-multiplier}")
     private double annotationMultiplier;
 
-    @Value("${spring.stream.bindings.resilience-lab-in-0.destination}")
-    private String RESILIENCE_LAB_BINDING;
+
 
     public ResilienceAppController(TroubleMakerAdapter troubleMakerAdapter,
                                    ProgrammaticRetryConfig programmaticRetryConfig,
@@ -50,13 +49,15 @@ public class ResilienceAppController {
 
     /**
      * Test PROGRAMMATIC retry configuration
-     * Uses Feign builder with custom RetryConfig (Database-friendly strategy)
+     * Uses Feign Builder with custom retry configuration
      */
     @PostMapping("/programmatic/retry")
     public ResponseEntity<Map<String, Object>> testProgrammaticRetry(@RequestBody(required = false) ErrorTestRequest errorRequest) {
         ErrorTestRequest verifiedErrorTestRequest = checkAndLogErrorTestRequest(errorRequest, "PROGRAMMATIC", "Feign Builder + Custom RetryConfig");
-        String strategyDescription = buildProgrammaticStrategyDescription();
-        String configurationDescription = buildProgrammaticConfigurationDescription();
+
+        String strategyDescription = getProgrammaticStrategyDescription();
+        String configurationDescription = getProgrammaticConfigurationDescription();
+
         String result = troubleMakerAdapter.simulateErrorWithProgrammaticRetry(verifiedErrorTestRequest);
         logger.info("Programmatic retry call successful: {}", result);
 
@@ -68,36 +69,6 @@ public class ResilienceAppController {
                 "timestamp", LocalDateTime.now()
         ));
     }
-
-    /**
-     * Test PROGRAMMATIC retry configuration
-     * Uses Feign builder with custom RetryConfig (Database-friendly strategy)
-     */
-    @PostMapping("/programmatic/async/retry")
-    public ResponseEntity<Map<String, Object>> testProgrammaticRetryAsync(
-            @RequestParam (value = "numOfMsg", required = false, defaultValue = "1") String numOfMsg,
-            @RequestBody(required = false) ErrorTestRequest errorRequest) {
-        ErrorTestRequest verifiedErrorTestRequest = checkAndLogErrorTestRequest(errorRequest,
-                "PROGRAMMATIC-ASYNC",
-                "Kafka + Feign Builder + Custom RetryConfig");
-
-        String strategyDescription = buildProgrammaticStrategyDescription();
-        String configurationDescription = buildProgrammaticConfigurationDescription();
-        messageProducer.sendMessage(
-                RESILIENCE_LAB_BINDING,
-                verifiedErrorTestRequest);
-
-        return ResponseEntity.ok(Map.of(
-                "status", "SUCCESS",
-                "strategy", strategyDescription,
-                "configuration", configurationDescription,
-                "result", "Message sent to programmatic retry binding",
-                "timestamp", LocalDateTime.now()
-        ));
-    }
-
-
-
 
     /**
      * Test @RETRY ANNOTATION configuration
@@ -119,54 +90,62 @@ public class ResilienceAppController {
                 "result", formatResult(result),
                 "timestamp", LocalDateTime.now()
         ));
-
-
     }
+
+    @PostMapping("/programmatic/retry/after-consume-kafka-msg/{consumeWay}/{numOfMessages}")
+    public ResponseEntity<Map<String, Object>> testSequentialBatchWindow(
+            @RequestParam(value = "numOfMessages", required = false, defaultValue = "20") int numOfMessages,
+            @RequestParam(value = "consumeWay", required = false, defaultValue = "sequential") String consumeWay,
+            @RequestBody(required = false) ErrorTestRequest errorRequest) {
+
+        ErrorTestRequest verifiedErrorTestRequest = checkAndLogErrorTestRequest(errorRequest, "SEQUENTIAL-WINDOW", "Sequential Consumer + Window Batch");
+        switch (consumeWay) {
+            case "sequential":
+                logger.info("Using SEQUENTIAL consume way");
+                messageProducer.sendSequentialMessages(numOfMessages, verifiedErrorTestRequest);
+                break;
+            case "concurrent":
+                logger.info("Using CONCURRENT consume way");
+                messageProducer.sendConcurrentMessages(numOfMessages, verifiedErrorTestRequest);
+                break;
+            default:
+                logger.warn("Unknown consume way: {}. Defaulting to SEQUENTIAL.", consumeWay);
+                messageProducer.sendSequentialMessages(numOfMessages, verifiedErrorTestRequest);
+                break;
+        }
+        return ResponseEntity.ok(
+                Map.of(
+                        "status", "SUCCESS",
+                        "strategy", "SEQUENTIAL-WINDOW",
+                        "configuration", String.format("Batch size: %d, Consume way: %s", numOfMessages, consumeWay),
+                        "result", "Messages sent successfully",
+                        "timestamp", LocalDateTime.now()
+                )
+        );
+    }
+
+
+
+    // =============== HELPER METHODS ===============
 
     private ErrorTestRequest checkAndLogErrorTestRequest(ErrorTestRequest errorTestRequest, String strategy, String configuration) {
         ErrorTestRequest verifiedErrorTestRequest = errorTestRequest == null ? createDefaultErrorRequest() : errorTestRequest;
 
-        logger.info("=== Testing {} Retry Strategy ===", strategy);
-        switch (strategy) {
-            case "PROGRAMMATIC":
-                logger.info("Configuration: Feign Builder + Custom RetryConfig");
-                break;
-            case "ANNOTATION":
-                logger.info("Configuration: @Retry Annotation + YAML Config");
-                break;
-            default:
-                logger.warn("Unknown strategy '{}' configuration", strategy);
-        }
-
+        logger.info("=== Testing {} Strategy ===", strategy);
+        logger.info("Configuration: {}", configuration);
         logger.info("Error request: {}", verifiedErrorTestRequest);
-
-        switch (strategy) {
-            case "PROGRAMMATIC":
-                logger.info("👨‍💻 [{}-RETRY] Starting call with FEIGN BUILDER + RetryConfig", strategy);
-                break;
-            case "ANNOTATION":
-                logger.info("＠ [{}-RETRY] Starting call with @RETRY ANNOTATION + YAML configuration", strategy);
-                break;
-            default:
-                logger.warn("Unknown Starting strategy '{}'", strategy);
-        }
-        logger.info("⚙️ [{}-RETRY] Error config: errorCode={}, errorRate={}, delay={}ms",
-                verifiedErrorTestRequest.getErrorCode(), verifiedErrorTestRequest.getErrorRate(), verifiedErrorTestRequest.getResponseDelayMs(), strategy);
+        logger.info("⚙️ [{}] Error config: errorCode={}, errorRate={}, delay={}ms",
+                strategy, verifiedErrorTestRequest.getErrorCode(),
+                verifiedErrorTestRequest.getErrorRate(), verifiedErrorTestRequest.getResponseDelayMs());
         return verifiedErrorTestRequest;
     }
 
-    /**
-     * Build programmatic strategy description from configuration
-     */
-    private String buildProgrammaticStrategyDescription() {
+    private String getProgrammaticStrategyDescription() {
         return String.format("Feign Builder - %s",
                 programmaticRetryConfig.getStrategy().replace("-", " ").toUpperCase());
     }
 
-    /**
-     * Build programmatic configuration description from YAML values
-     */
-    private String buildProgrammaticConfigurationDescription() {
+    private String getProgrammaticConfigurationDescription() {
         if ("random-backoff".equals(programmaticRetryConfig.getStrategy())) {
             return String.format("%d attempts, exponential random backoff (%dms-%ds, multiplier: %.1f, randomization: %.1f)",
                     programmaticRetryConfig.getMaxAttempts(),
@@ -182,9 +161,6 @@ public class ResilienceAppController {
         }
     }
 
-    /**
-     * Build annotation configuration description from YAML values
-     */
     private String buildAnnotationConfigurationDescription() {
         return String.format("%d attempts, exponential backoff (%s with %.1fx multiplier)",
                 annotationMaxAttempts,
@@ -192,9 +168,6 @@ public class ResilienceAppController {
                 annotationMultiplier);
     }
 
-    /**
-     * Format the result to be more readable in Bruno GUI
-     */
     private Object formatResult(String result) {
         if (result == null || result.trim().isEmpty()) {
             return "Empty response";
@@ -216,9 +189,6 @@ public class ResilienceAppController {
         return formattedResult;
     }
 
-    /**
-     * This default was used before for fast test can be removed when the simulation stable
-     */
     private ErrorTestRequest createDefaultErrorRequest() {
         ErrorTestRequest defaultRequest = new ErrorTestRequest();
         defaultRequest.setErrorCode("503");

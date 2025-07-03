@@ -8,32 +8,64 @@ spring:
     name: resilience-app
   stream:
     function:
-      definition: onErrorTestRequest
+      definition: onErrorTestRequestSequential;onErrorTestRequestConcurrent
     default:
       group: 'resilience-lab'
       consumer:
         max-attempts: 1
     bindings:
-      resilience-lab-in-0:
-        destination: resilience-lab-topic
-      resilience-lab-out-0:
-        destination: resilience-lab-topic
+      # Sequential consumer binding
+      onErrorTestRequestSequential-in-0:
+        destination: ${kafka-custom-config.topics.sequential-consumer.name}
+        consumer:
+          concurrency: 1  # Single thread for sequential processing
+      # Concurrent consumer binding
+      onErrorTestRequestConcurrent-in-0:
+        destination: ${kafka-custom-config.topics.concurrent-consumer.name}
+        consumer:
+          concurrency: 3  # Multiple threads for concurrent processing
+      # Producer bindings
+      resilience-lab-sequential-out-0:
+        destination: ${kafka-custom-config.topics.sequential-consumer.name}
+      resilience-lab-concurrent-out-0:
+        destination: ${kafka-custom-config.topics.concurrent-consumer.name}
     kafka:
       binder:
-        brokers: ${KAFKA_BROKERS:localhost:9092}
+        brokers: localhost:9092
         enableObservation: true
-        configuration:
-          sasl:
-            jaas:
-              enabled: ${KAFKA_JAAS_ENABLED:false}
-              config: org.apache.kafka.common.security.scram.ScramLoginModule required username="${KAFKA_USER}" password="${KAFKA_PASSWORD}";
-            mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
-          security:
-            user: ${KAFKA_USER}
-            password: ${KAFKA_PASSWORD}
-            protocol: ${KAFKA_PROTOCOL:PLAINTEXT}
-        consumerProperties:
+        # Producer batch configuration
+        producer-properties:
+          batch.size: 16384  # Batch size in bytes
+          linger.ms: 10      # Wait time to accumulate messages
+          buffer.memory: 33554432
+          compression.type: snappy
+          acks: 1
+          retries: 3
+        # Consumer configuration
+        consumer-properties:
+          max.poll.records: 500        # Max records per poll
+          fetch.min.bytes: 1024        # Minimum bytes to fetch
+          fetch.max.wait.ms: 300       # Max wait time for fetch
           auto-offset-reset: latest
+          enable-auto-commit: true
+          auto-commit-interval-ms: 1000
+        configuration:
+          security:
+            user: ${kakfa-properties.credentials.user}
+            password: ${kakfa-properties.credentials.password}
+            protocol: ${kakfa-properties.credentials.mechanism}
+
+kafka-custom-config:
+  topics:
+    sequential-consumer:
+      name: resilience-lab-sequential-topic
+    concurrent-consumer:
+      name: resilience-lab-concurrent-topic
+  credentials:
+    user: resilience_app_user
+    password: resilience_app_password
+    mechanism: PLAIN
+
 # Resilience4j Configuration
 resilience4j:
   retry:
@@ -64,7 +96,6 @@ resilience4j:
 app:
   troubleMaker:
     url: http://localhost:8081
-
   # Programmatic Retry Configuration
   programmaticRetryConfig:
     max-attempts: 5
@@ -74,15 +105,6 @@ app:
     exponential-backoff-multiplier: 1.5
     randomization-factor: 0.5
     maxInterval: 10000  # in milliseconds (10 seconds)
-
-    # Alternative configurations:
-    # For standard-exponential strategy:
-    # strategy: "standard-exponential"
-    # initial-interval: 500
-    # exponential-backoff-multiplier: 2.0
-
-    # For custom-interval strategy:
-    # strategy: "custom-interval"
 
     retry-exceptions:
       - java.net.ConnectException
@@ -96,3 +118,10 @@ app:
       - feign.FeignException.InternalServerError
       - feign.FeignException.BadGateway
       - feign.FeignException.GatewayTimeout
+
+# Logging configuration
+logging:
+  level:
+    com.example.resilience_app: DEBUG
+    org.apache.kafka: INFO
+    io.github.resilience4j: DEBUG

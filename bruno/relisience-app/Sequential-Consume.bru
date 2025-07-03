@@ -1,0 +1,34 @@
+meta {
+  name: Sequential-Consume
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/test/programmatic/retry/after-consume-kafka-msg
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "errorCode": "503",
+    "errorRate": 0.8,
+    "responseDelayMs": 500,
+    "retryAfterSeconds": 5,
+    "timeoutDelayMs":1000,
+    "enabled": true,
+    "description": "Programmatic retry test with 100% error rate"
+  }
+}
+
+docs {
+  Test the programmatic retry approach with high error rate.
+  
+  Strategy: Database-friendly (4 attempts, exponential random backoff 200ms-10s)
+  Expected: Multiple retry attempts with varying intervals
+}
