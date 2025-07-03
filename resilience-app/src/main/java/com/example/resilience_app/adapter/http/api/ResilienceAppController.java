@@ -37,7 +37,6 @@ public class ResilienceAppController {
     private double annotationMultiplier;
 
 
-
     public ResilienceAppController(TroubleMakerAdapter troubleMakerAdapter,
                                    ProgrammaticRetryConfig programmaticRetryConfig,
                                    ObjectMapper objectMapper, MessageProducer messageProducer) {
@@ -94,36 +93,40 @@ public class ResilienceAppController {
 
     @PostMapping("/programmatic/retry/after-consume-kafka-msg/{consumeWay}/{numOfMessages}")
     public ResponseEntity<Map<String, Object>> testSequentialBatchWindow(
-            @RequestParam(value = "numOfMessages", required = false, defaultValue = "20") int numOfMessages,
-            @RequestParam(value = "consumeWay", required = false, defaultValue = "sequential") String consumeWay,
+            @PathVariable("numOfMessages") int numOfMessages,  // ✅ Fixed: Use @PathVariable
+            @PathVariable("consumeWay") String consumeWay,     // ✅ Fixed: Use @PathVariable
             @RequestBody(required = false) ErrorTestRequest errorRequest) {
 
-        ErrorTestRequest verifiedErrorTestRequest = checkAndLogErrorTestRequest(errorRequest, "SEQUENTIAL-WINDOW", "Sequential Consumer + Window Batch");
-        switch (consumeWay) {
+        ErrorTestRequest verifiedErrorTestRequest = checkAndLogErrorTestRequest(errorRequest, "BATCH-WINDOW", "Consumer + Window Batch");
+
+        logger.info("🚀 [BATCH-WINDOW] Processing {} messages with {} strategy", numOfMessages, consumeWay);
+
+        switch (consumeWay.toLowerCase()) {
             case "sequential":
-                logger.info("Using SEQUENTIAL consume way");
+                logger.info("📦 [BATCH-WINDOW] Using SEQUENTIAL consume strategy");
                 messageProducer.sendSequentialMessages(numOfMessages, verifiedErrorTestRequest);
                 break;
             case "concurrent":
-                logger.info("Using CONCURRENT consume way");
+                logger.info("📦 [BATCH-WINDOW] Using CONCURRENT consume strategy");
                 messageProducer.sendConcurrentMessages(numOfMessages, verifiedErrorTestRequest);
                 break;
             default:
-                logger.warn("Unknown consume way: {}. Defaulting to SEQUENTIAL.", consumeWay);
+                logger.warn("⚠️ [BATCH-WINDOW] Unknown consume strategy: {}. Defaulting to SEQUENTIAL.", consumeWay);
                 messageProducer.sendSequentialMessages(numOfMessages, verifiedErrorTestRequest);
                 break;
         }
+
         return ResponseEntity.ok(
                 Map.of(
                         "status", "SUCCESS",
-                        "strategy", "SEQUENTIAL-WINDOW",
+                        "strategy", "BATCH-WINDOW-" + consumeWay.toUpperCase(),
                         "configuration", String.format("Batch size: %d, Consume way: %s", numOfMessages, consumeWay),
                         "result", "Messages sent successfully",
+                        "messagesCount", numOfMessages,
                         "timestamp", LocalDateTime.now()
                 )
         );
     }
-
 
 
     // =============== HELPER METHODS ===============

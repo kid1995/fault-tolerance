@@ -1,13 +1,18 @@
 meta {
-  name: Sequential-Consume
+  name: Sequential-Consume-Fixed
   type: http
   seq: 4
 }
 
 post {
-  url: {{baseUrl}}/api/test/programmatic/retry/after-consume-kafka-msg
+  url: {{baseUrl}}/api/test/programmatic/retry/after-consume-kafka-msg/:consumeWay/:numOfMessages
   body: json
   auth: none
+}
+
+params:path {
+  numOfMessages: 5
+  consumeWay: sequential
 }
 
 headers {
@@ -20,15 +25,16 @@ body:json {
     "errorRate": 0.8,
     "responseDelayMs": 500,
     "retryAfterSeconds": 5,
-    "timeoutDelayMs":1000,
+    "timeoutDelayMs": 1000,
     "enabled": true,
-    "description": "Programmatic retry test with 100% error rate"
+    "description": "Sequential batch test with retry"
   }
 }
 
 docs {
-  Test the programmatic retry approach with high error rate.
+  Fixed version - now includes path variables:
+  - consumeWay: sequential (or concurrent)
+  - numOfMessages: 5 (adjust as needed)
   
-  Strategy: Database-friendly (4 attempts, exponential random backoff 200ms-10s)
-  Expected: Multiple retry attempts with varying intervals
+  URL pattern: /api/test/programmatic/retry/after-consume-kafka-msg/{consumeWay}/{numOfMessages}
 }
