@@ -21,7 +21,6 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
-      - "9997:9997"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper.local:2181
@@ -34,9 +33,6 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_NUM_PARTITIONS: 3
       KAFKA_DEFAULT_REPLICATION_FACTOR: 1
-      # JMX settings for monitoring
-      KAFKA_JMX_PORT: 9997
-      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka.local -Dcom.sun.management.jmxremote.rmi.port=9997
     volumes:
       - kafka-data:/var/lib/kafka/data
     healthcheck:
@@ -46,31 +42,12 @@ services:
       retries: 3
       start_period: 120s
 
-  # Kafka UI for monitoring
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: kafka-ui.local
-    depends_on:
-      - kafka
-    ports:
-      - "8090:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka.local:9092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper.local:2181
-      KAFKA_CLUSTERS_0_JMXPORT: 9997
-      DYNAMIC_CONFIG_ENABLED: true
-    volumes:
-      - kafka-ui-data:/etc/kafkaui
-
 volumes:
   zookeeper-data:
     driver: local
   zookeeper-logs:
     driver: local
   kafka-data:
-    driver: local
-  kafka-ui-data:
     driver: local
 
 networks:

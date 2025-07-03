@@ -7,9 +7,9 @@ spring:
   application:
     name: resilience-app
   cloud:
+    function:
+      definition: "onErrorTestRequestSequential; onErrorTestRequestConcurrent"
     stream:
-      function:
-        definition: onErrorTestRequestSequential;onErrorTestRequestConcurrent
       bindings:
         # Sequential consumer binding
         onErrorTestRequestSequential-in-0:
@@ -17,14 +17,12 @@ spring:
           group: resilience-lab-sequential
           consumer:
             concurrency: 1
-            use-native-decoding: true
         # Concurrent consumer binding
         onErrorTestRequestConcurrent-in-0:
           destination: resilience-lab-concurrent-topic
           group: resilience-lab-concurrent
           consumer:
             concurrency: 3
-            use-native-decoding: true
         # Producer bindings
         resilience-lab-sequential-out-0:
           destination: resilience-lab-sequential-topic
@@ -33,37 +31,20 @@ spring:
       kafka:
         binder:
           brokers: localhost:9092
-          auto-create-topics: true
-          auto-add-partitions: true
-          min-partition-count: 3
-          replication-factor: 1
-        default:
-          consumer:
-            auto-offset-reset: earliest
-            enable-auto-commit: true
-            auto-commit-interval: 1000
-            session-timeout: 30000
-            heartbeat-interval: 3000
-          producer:
-            batch-size: 16384
-            linger: 10
-            compression-type: snappy
-            acks: 1
-            retries: 3
-        bindings:
-          # Sequential consumer configuration
-          onErrorTestRequestSequentialSimple-in-0:
-            consumer:
-              enable-dlq: false
-              auto-commit-offset: true
-              start-offset: earliest
-          # Concurrent consumer configuration
-          onErrorTestRequestConcurrentSimple-in-0:
-            consumer:
-              enable-dlq: false
-              auto-commit-offset: true
-              start-offset: earliest
-
+          enableObservation: true
+          configuration:
+            sasl:
+              jaas:
+                enabled: false
+                config: org.apache.kafka.common.security.plain.PlainLoginModule required username="resilience_app_user" password="resilience_app_password";
+              mechanism: PLAIN
+            security:
+              user: resilience_app_user
+              password: resilience_app_password
+              protocol: PLAINTEXT
+              saslMechanism: PLAIN
+          consumerProperties:
+            auto-offset-reset: latest
 
 kafka-custom-config:
   topics:
@@ -115,7 +96,6 @@ app:
     exponential-backoff-multiplier: 1.5
     randomization-factor: 0.5
     maxInterval: 10000  # in milliseconds (10 seconds)
-
     retry-exceptions:
       - java.net.ConnectException
       - java.net.SocketTimeoutException
