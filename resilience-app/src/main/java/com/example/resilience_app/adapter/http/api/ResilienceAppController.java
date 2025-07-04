@@ -99,19 +99,19 @@ public class ResilienceAppController {
 
         ErrorTestRequest verifiedErrorTestRequest = checkAndLogErrorTestRequest(errorRequest, "BATCH-WINDOW", "Consumer + Window Batch");
 
-        logger.info("🚀 [BATCH-WINDOW] Processing {} messages with {} strategy", numOfMessages, consumeWay);
+        logger.info("🚀 [KAFKA] Processing {} messages with {} strategy", numOfMessages, consumeWay);
 
         switch (consumeWay.toLowerCase()) {
             case "sequential":
-                logger.info("📦 [BATCH-WINDOW] Using SEQUENTIAL consume strategy");
+                logger.info("📦 [KAFKA] Using SEQUENTIAL consume strategy");
                 messageProducer.sendSequentialMessages(numOfMessages, verifiedErrorTestRequest);
                 break;
             case "concurrent":
-                logger.info("📦 [BATCH-WINDOW] Using CONCURRENT consume strategy");
+                logger.info("📦 [KAFKA] Using CONCURRENT consume strategy");
                 messageProducer.sendConcurrentMessages(numOfMessages, verifiedErrorTestRequest);
                 break;
             default:
-                logger.warn("⚠️ [BATCH-WINDOW] Unknown consume strategy: {}. Defaulting to SEQUENTIAL.", consumeWay);
+                logger.warn("⚠️ [KAFKA] Unknown consume strategy: {}. Defaulting to SEQUENTIAL.", consumeWay);
                 messageProducer.sendSequentialMessages(numOfMessages, verifiedErrorTestRequest);
                 break;
         }
@@ -127,9 +127,6 @@ public class ResilienceAppController {
                 )
         );
     }
-
-
-    // =============== HELPER METHODS ===============
 
     private ErrorTestRequest checkAndLogErrorTestRequest(ErrorTestRequest errorTestRequest, String strategy, String configuration) {
         ErrorTestRequest verifiedErrorTestRequest = errorTestRequest == null ? createDefaultErrorRequest() : errorTestRequest;
