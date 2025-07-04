@@ -50,7 +50,7 @@ public class ProgrammaticRetryConfig {
     @Value("${app.programmaticRetryConfig.exponential-backoff-multiplier}")
     private double multiplier;
 
-    @Value("${app.programmaticRetryConfig.randomization-factor}")
+    @Value("${app.programmaticRetryConfig.randomized-wait-factor}")
     private double randomizationFactor;
 
     @Value("${app.programmaticRetryConfig.maxInterval}")

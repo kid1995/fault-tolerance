@@ -1,18 +1,17 @@
 meta {
-  name: Sequential-Consume-Fixed
+  name: Kafka-Consume-Retry
   type: http
   seq: 4
 }
 
 post {
-  url: {{baseUrl}}/api/test/programmatic/retry/after-consume-kafka-msg/:consumeWay/:numOfMessages
+  url: {{baseUrl}}/api/test/programmatic/retry/after-consume-kafka-msg/:numOfMessages
   body: json
   auth: none
 }
 
 params:path {
-  numOfMessages: 15
-  consumeWay: sequential
+  numOfMessages: 5
 }
 
 headers {

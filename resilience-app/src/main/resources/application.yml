@@ -8,26 +8,16 @@ spring:
     name: resilience-app
   cloud:
     function:
-      definition: "onErrorTestRequestSequential; onErrorTestRequestConcurrent"
+      definition: "onErrorTestRequest"
     stream:
       bindings:
         # Sequential consumer binding
-        onErrorTestRequestSequential-in-0:
-          destination: resilience-lab-sequential-topic
-          group: resilience-lab-sequential
-          consumer:
-            concurrency: 1
-        # Concurrent consumer binding
-        onErrorTestRequestConcurrent-in-0:
-          destination: resilience-lab-concurrent-topic
-          group: resilience-lab-concurrent
-          consumer:
-            concurrency: 3
+        onErrorTestRequest-in-0:
+          destination: resilience-lab-topic
+          group: resilience-lab
         # Producer bindings
-        resilience-lab-sequential-out-0:
-          destination: resilience-lab-sequential-topic
-        resilience-lab-concurrent-out-0:
-          destination: resilience-lab-concurrent-topic
+        resilience-lab-out-0:
+          destination: resilience-lab-topic
       kafka:
         binder:
           brokers: localhost:9092
@@ -45,7 +35,17 @@ spring:
               saslMechanism: PLAIN
           consumerProperties:
             auto-offset-reset: latest
-
+          producerProperties:
+            # Batch size in bytes (default: 16384)
+            batch-size: 32768
+            # Wait time before sending batch (default: 0)
+            linger-ms: 10
+            # Buffer memory for batching (default: 33554432)
+            buffer-memory: 67108864
+            # Compression type for batches
+            compression-type: snappy
+            # Maximum request size
+            max-request-size: 1048576
 # Resilience4j Configuration
 resilience4j:
   retry:
@@ -58,6 +58,8 @@ resilience4j:
         max-attempts: 5
         wait-duration: 500ms
         enable-exponential-backoff: true
+        enable-randomized-wait: true
+        randomized-wait-factor: 0.5
         exponential-backoff-multiplier: 1.5
         retry-exceptions:
           - java.net.ConnectException
@@ -66,7 +68,6 @@ resilience4j:
           - java.net.UnknownHostException
           - java.io.IOException
           - feign.RetryableException
-          - feign.FeignException
           - feign.FeignException.ServiceUnavailable
           - feign.FeignException.InternalServerError
           - feign.FeignException.BadGateway
@@ -83,5 +84,5 @@ app:
     strategy: "random-backoff"
     initial-interval: 200  # in milliseconds
     exponential-backoff-multiplier: 1.5
-    randomization-factor: 0.5
+    randomized-wait-factor: 0.5
     maxInterval: 10000  # in milliseconds (10 seconds)

@@ -13,27 +13,22 @@ public class MessageProducer {
     private static final Logger logger = LoggerFactory.getLogger(MessageProducer.class);
 
     // ✅ Use Spring Cloud Stream binding names instead of topic names
-    private static final String SEQUENTIAL_BINDING = "resilience-lab-sequential-out-0";
-    private static final String CONCURRENT_BINDING = "resilience-lab-concurrent-out-0";
+    private static final String RESILIENCE_LAB_OUT = "resilience-lab-out-0";
+
 
     public MessageProducer(StreamBridge streamBridge) {
         this.streamBridge = streamBridge;
     }
 
     public void sendSequentialMessages(int numberOfMessages, ErrorTestRequest errorRequest) {
-        logger.info("📦 [SEQUENTIAL-PRODUCER] Starting to send {} messages", numberOfMessages);
-        sendMessages(SEQUENTIAL_BINDING, numberOfMessages, errorRequest, "SEQUENTIAL");
-        logger.info("✅ [SEQUENTIAL-PRODUCER] Finished sending {} messages", numberOfMessages);
+        logger.info("📦 [PRODUCER] Starting to send {} messages", numberOfMessages);
+        sendMessages(numberOfMessages, errorRequest);
+        logger.info("✅ [PRODUCER] Finished sending {} messages", numberOfMessages);
     }
 
-    public void sendConcurrentMessages(int numberOfMessages, ErrorTestRequest errorRequest) {
-        logger.info("📦 [CONCURRENT-PRODUCER] Starting to send {} messages", numberOfMessages);
-        sendMessages(CONCURRENT_BINDING, numberOfMessages, errorRequest, "CONCURRENT");
-        logger.info("✅ [CONCURRENT-PRODUCER] Finished sending {} messages", numberOfMessages);
-    }
 
-    private void sendMessages(String bindingName, int numberOfMessages, ErrorTestRequest errorRequest, String strategyName) {
-        logger.info("📦 [{}] Processing {} messages to binding: {}", strategyName, numberOfMessages, bindingName);
+    private void sendMessages(int numberOfMessages, ErrorTestRequest errorRequest) {
+        logger.info("📦 [PRODUCER] Processing {} messages to binding: {}", numberOfMessages, MessageProducer.RESILIENCE_LAB_OUT);
 
         String batchId = LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
 
@@ -41,17 +36,17 @@ public class MessageProducer {
             ErrorTestRequest messageRequest = createBatchMessage(errorRequest, batchId + "_" + i);
 
             try {
-                boolean sent = streamBridge.send(bindingName, messageRequest);
+                boolean sent = streamBridge.send(MessageProducer.RESILIENCE_LAB_OUT, messageRequest);
                 if (sent) {
-                    logger.info("📤 [{}] Message {}/{} sent successfully: {}",
-                            strategyName, i, numberOfMessages, messageRequest.getDescription());
+                    logger.info("📤 [PRODUCER] Message {}/{} sent successfully: {}",
+                            i, numberOfMessages, messageRequest.getDescription());
                 } else {
-                    logger.error("❌ [{}] Failed to send message {}/{}: {}",
-                            strategyName, i, numberOfMessages, messageRequest.getDescription());
+                    logger.error("❌ [PRODUCER] Failed to send message {}/{}: {}",
+                            i, numberOfMessages, messageRequest.getDescription());
                 }
             } catch (Exception e) {
-                logger.error("❌ [{}] Exception sending message {}/{}: {}",
-                        strategyName, i, numberOfMessages, e.getMessage(), e);
+                logger.error("❌ [PRODUCER] Exception sending message {}/{}: {}",
+                        i, numberOfMessages, e.getMessage(), e);
             }
         }
     }

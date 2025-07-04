@@ -91,36 +91,24 @@ public class ResilienceAppController {
         ));
     }
 
-    @PostMapping("/programmatic/retry/after-consume-kafka-msg/{consumeWay}/{numOfMessages}")
+    @PostMapping("/programmatic/retry/after-consume-kafka-msg/{numOfMessages}")
     public ResponseEntity<Map<String, Object>> testSequentialBatchWindow(
             @PathVariable("numOfMessages") int numOfMessages,  // ✅ Fixed: Use @PathVariable
-            @PathVariable("consumeWay") String consumeWay,     // ✅ Fixed: Use @PathVariable
             @RequestBody(required = false) ErrorTestRequest errorRequest) {
 
         ErrorTestRequest verifiedErrorTestRequest = checkAndLogErrorTestRequest(errorRequest, "BATCH-WINDOW", "Consumer + Window Batch");
 
-        logger.info("🚀 [KAFKA] Processing {} messages with {} strategy", numOfMessages, consumeWay);
+        logger.info("🚀 [KAFKA] Processing {} messages", numOfMessages);
 
-        switch (consumeWay.toLowerCase()) {
-            case "sequential":
-                logger.info("📦 [KAFKA] Using SEQUENTIAL consume strategy");
-                messageProducer.sendSequentialMessages(numOfMessages, verifiedErrorTestRequest);
-                break;
-            case "concurrent":
-                logger.info("📦 [KAFKA] Using CONCURRENT consume strategy");
-                messageProducer.sendConcurrentMessages(numOfMessages, verifiedErrorTestRequest);
-                break;
-            default:
-                logger.warn("⚠️ [KAFKA] Unknown consume strategy: {}. Defaulting to SEQUENTIAL.", consumeWay);
-                messageProducer.sendSequentialMessages(numOfMessages, verifiedErrorTestRequest);
-                break;
-        }
+        String strategyDescription = "Programmatic Retry After Consume Kafka Messages";
+        String configurationDescription = buildAnnotationConfigurationDescription();
 
+        messageProducer.sendSequentialMessages(numOfMessages, verifiedErrorTestRequest);
         return ResponseEntity.ok(
                 Map.of(
                         "status", "SUCCESS",
-                        "strategy", "BATCH-WINDOW-" + consumeWay.toUpperCase(),
-                        "configuration", String.format("Batch size: %d, Consume way: %s", numOfMessages, consumeWay),
+                        "strategy", strategyDescription,
+                        "configuration", configurationDescription,
                         "result", "Messages sent successfully",
                         "messagesCount", numOfMessages,
                         "timestamp", LocalDateTime.now()
