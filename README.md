@@ -18,11 +18,15 @@ The `resilience-app` exposes an API that allows defining the `trouble-maker`'s b
    * **Command Line (macOS/Linux):** `./gradlew bootRun`
    * **Command Line (Windows):** `gradlew.bat bootRun`
 
-2. **Simulate requests:** Use the provided HTTP client collection (`./http-client/relisience-app` relative to the project root) to send requests to the `resilience-app`. **Open the collection directly in your HTTP client instead of importing it.** These pre-configured requests define the behavior of the `trouble-maker`.
+2. **Simulate requests:** Use the provided Bruno HTTP client collection (`./bruno/relisience-app`) to send requests to the `resilience-app`. **Open the collection directly in your HTTP client instead of importing it.** These pre-configured requests define the behavior of the `trouble-maker`.
 
 ## Simulation Scenarios
 
 ### 1. Direct HTTP Retry Simulation
+
+**Bruno Requests:**
+- **`Programmatic Retry`** - Tests programmatic retry configuration using Feign Builder with custom RetryConfig
+- **`Annotation Retry`** - Tests @Retry annotation configuration with YAML settings
 
 The basic simulation process can be broken down into the following steps:
 
@@ -33,6 +37,9 @@ The basic simulation process can be broken down into the following steps:
 5. **Response Handling:** If a successful response is received (either directly or after retries), `resilience-app` returns a success response to the client. If the maximum retry attempts are reached without a successful response, `resilience-app` executes a fallback method defined in the retry configuration.
 
 ### 2. Kafka-Based Fault Simulation
+
+**Bruno Request:**
+- **`Kafka-Consume-Retry`** - Tests retry mechanisms within Kafka consumer context with configurable message count
 
 This simulation observes the behavior of retry mechanisms within Kafka consumers and identifies potential side effects on message processing.
 
@@ -79,4 +86,41 @@ docker-compose ps
 ```
 
 The following topics will be created automatically:
-- `resilience-lab-topic` 
+- `resilience-lab-topic`
+
+## Request Parameters Reference
+
+All Bruno requests accept the following JSON body structure for error simulation configuration:
+
+```json
+{
+  "errorCode": "503",
+  "errorRate": 0.8,
+  "responseDelayMs": 500,
+  "retryAfterSeconds": 5,
+  "timeoutDelayMs": 5000,
+  "enabled": true,
+  "description": "Test description"
+}
+```
+
+### Parameter Descriptions:
+- **`errorCode`**: HTTP error code to simulate (503, 500, 502, 504, 429, 408)
+- **`errorRate`**: Probability of error occurrence (0.0 = no errors, 1.0 = always error)
+- **`responseDelayMs`**: Simulated server response delay in milliseconds
+- **`retryAfterSeconds`**: Value for "Retry-After" header in error responses
+- **`timeoutDelayMs`**: Timeout delay for 504/408 errors
+- **`enabled`**: Enable/disable error simulation
+- **`description`**: Human-readable description of the test scenario
+
+### Kafka-Consume-Retry Specific:
+The `Kafka-Consume-Retry` request includes an additional path parameter:
+- **`numOfMessages`**: Number of messages to send to Kafka topic (configurable in Bruno request path)
+
+## Running Simulations
+
+1. **Start Infrastructure:** `docker-compose up -d`
+2. **Start Applications:** Run both `resilience-app` and `trouble-maker`
+3. **Execute Tests:** Use Bruno collection requests:
+   - For direct HTTP retry testing: `Programmatic Retry` or `Annotation Retry`
+   - For Kafka consumer retry testing: `Kafka-Consume-Retry`
