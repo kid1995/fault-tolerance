@@ -1,6 +1,6 @@
 # Fault Tolerance Simulation with Resilience4j
 
-This project demonstrates fault tolerance between Spring services using Resilience4j.  It simulates error scenarios and showcases how Resilience4j's retry mechanism handles them.
+This project demonstrates fault tolerance between Spring services using Resilience4j. It simulates error scenarios and showcases how Resilience4j's retry mechanism handles them.
 
 ## Introduction
 
@@ -14,18 +14,69 @@ The `resilience-app` exposes an API that allows defining the `trouble-maker`'s b
 ## How To Use
 
 1. **Start both applications:** Navigate to the root directory of each application (`resilience-app` and `trouble-maker`) and start them.
-    * **IntelliJ:** Click the "Run" button.
-    * **Command Line (macOS/Linux):** `./gradlew bootRun`
-    * **Command Line (Windows):** `gradlew.bat bootRun`
+   * **IntelliJ:** Click the "Run" button.
+   * **Command Line (macOS/Linux):** `./gradlew bootRun`
+   * **Command Line (Windows):** `gradlew.bat bootRun`
 
-2. **Simulate requests:** Use the provided HTTP client collection (`./http-client/relisience-app` relative to the project root) to send requests to the `resilience-app`.  **Open the collection directly in your HTTP client instead of importing it.**  These pre-configured requests define the behavior of the `trouble-maker`.
+2. **Simulate requests:** Use the provided HTTP client collection (`./http-client/relisience-app` relative to the project root) to send requests to the `resilience-app`. **Open the collection directly in your HTTP client instead of importing it.** These pre-configured requests define the behavior of the `trouble-maker`.
 
-## Simulation Steps
+## Simulation Scenarios
 
-The simulation process can be broken down into the following steps:
+### 1. Direct HTTP Retry Simulation
+
+The basic simulation process can be broken down into the following steps:
 
 1. **Request Configuration:** The HTTP client sends a request to `resilience-app`, specifying the desired error type and frequency for the `trouble-maker` to simulate.
 2. **Request Forwarding:** The `resilience-app` acts as a proxy, forwarding the request to the `trouble-maker` service using OpenFeign.
-3. **Fault Injection:** The `trouble-maker` receives the request and, based on the configured parameters, simulates an error.  Randomization is used to determine whether a successful response or an error is returned.
-4. **Retry Mechanism:** If an error occurs, `resilience-app` utilizes Resilience4j to retry the request to the `trouble-maker`.  This continues until a successful response is received or the maximum retry attempts are reached.
-5. **Response Handling:** If a successful response is received (either directly or after retries), `resilience-app` returns a success response to the client.  If the maximum retry attempts are reached without a successful response, `resilience-app` executes a fallback method defined in the retry configuration.
+3. **Fault Injection:** The `trouble-maker` receives the request and, based on the configured parameters, simulates an error. Randomization is used to determine whether a successful response or an error is returned.
+4. **Retry Mechanism:** If an error occurs, `resilience-app` utilizes Resilience4j to retry the request to the `trouble-maker`. This continues until a successful response is received or the maximum retry attempts are reached.
+5. **Response Handling:** If a successful response is received (either directly or after retries), `resilience-app` returns a success response to the client. If the maximum retry attempts are reached without a successful response, `resilience-app` executes a fallback method defined in the retry configuration.
+
+### 2. Kafka-Based Fault Simulation
+
+This simulation observes the behavior of retry mechanisms within Kafka consumers and identifies potential side effects on message processing.
+
+#### Objective
+Investigate what happens when HTTP retries are executed within a Kafka consumer context and whether this causes any adverse effects such as:
+- Message processing delays
+- Consumer lag accumulation
+- Resource exhaustion
+- Connection timeouts
+
+#### Setup
+Through the `resilience-app` endpoint, you can specify the number of messages to process. The producer is configured to send messages in batches, simulating realistic message flow patterns.
+
+#### Process Flow
+
+1. **HTTP Request with Batch Configuration:** Send an HTTP request to `resilience-app` containing both the error simulation configuration (same as the direct simulation) and the number of messages to process.
+
+2. **Message Production:** Instead of directly calling the `trouble-maker` service, the endpoint uses a Kafka producer to:
+   - Package the error simulation configuration into Kafka messages
+   - Send the specified number of messages to the Kafka broker
+   - Support both sequential and concurrent message sending strategies
+
+3. **Message Consumption:** A Kafka consumer implemented within `resilience-app` processes the messages:
+   - Polls messages from the Kafka topics
+   - Extracts the error simulation configuration from each message
+   - Executes the same HTTP retry logic as the direct simulation
+
+4. **Retry Execution in Consumer Context:** When HTTP requests fail during message processing:
+   - Resilience4j retry mechanisms are triggered within the consumer thread
+   - The simulation observes the impact on overall message throughput
+   - Monitors for consumer lag and processing delays
+
+## Prerequisites
+
+### Kafka Infrastructure
+Before running the Kafka-based simulation, ensure Kafka is running:
+
+```bash
+# Start Kafka using Docker Compose
+docker-compose up -d
+
+# Verify Kafka is running
+docker-compose ps
+```
+
+The following topics will be created automatically:
+- `resilience-lab-topic` 
